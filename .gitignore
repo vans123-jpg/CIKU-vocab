@@ -1,0 +1,6 @@
+.chrome-profile*/
+.chrome-test*/
+shots/
+shots2/
+test*.mjs
+_check.js

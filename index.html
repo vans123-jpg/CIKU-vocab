@@ -172,6 +172,8 @@
   .ex-en span{flex:1}
   .ex-en button{border:0;background:none;font-size:14px;opacity:.65;padding:2px}
   .ex-zh{font-size:13.5px;color:var(--muted);margin:0;line-height:1.6}
+  .prod{font-size:12.5px;color:var(--muted);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .prod b{color:var(--brand)}
   .rate-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:auto}
   .rate{border:1px solid var(--line);border-radius:14px;padding:12px 6px;background:var(--card);font-size:14.5px;font-weight:600;display:grid;gap:4px;justify-items:center;transition:.16s}
   .rate kbd{font-size:10px;border-color:transparent;background:rgba(0,0,0,.04);opacity:.6}
@@ -217,7 +219,7 @@
   /* ---------- quiz ---------- */
   .quiz-shell{max-width:720px;margin:0 auto}
   .quiz-shell .pad{display:grid;gap:6px}
-  .mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+  .mode-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
   .mode-card{
     border:1px solid var(--line);background:var(--card);border-radius:18px;padding:20px;text-align:left;
     display:grid;gap:6px;transition:.16s;
@@ -343,7 +345,7 @@
 <header class="topbar">
   <div class="brand">
     <div class="logo">拾</div>
-    <div><b>拾词</b><small>英语词库 · 50 词</small></div>
+    <div><b>拾词</b><small>英语词库 · <span id="brandCount">50</span> 词</small></div>
   </div>
   <nav class="tabs" id="tabs">
     <button data-view="home" class="active">首页</button>
@@ -379,7 +381,7 @@
 
     <div class="stat-grid">
       <div class="card stat"><small>待复习</small><b id="stDue">0</b><span>今日到期</span></div>
-      <div class="card stat"><small>已学单词</small><b id="stLearned">0</b><span>共 50 词</span></div>
+      <div class="card stat"><small>已学单词</small><b id="stLearned">0</b><span>共 <span id="statTotal">50</span> 词</span></div>
       <div class="card stat"><small>累计正确率</small><b id="stAcc">—</b><span>答题统计</span></div>
       <div class="card stat"><small>生词本</small><b id="stStar">0</b><span>已收藏</span></div>
     </div>
@@ -434,6 +436,7 @@
           <p class="ex-en"><span id="exEn"></span><button id="speakEx" aria-label="播放例句">🔊</button></p>
           <p class="ex-zh" id="exZh"></p>
         </div>
+        <p class="prod" id="prodText"></p>
         <div class="rate-grid">
           <button class="rate again" data-q="0">忘记<kbd>1</kbd></button>
           <button class="rate hard" data-q="1">模糊<kbd>2</kbd></button>
@@ -459,7 +462,7 @@
   <!-- ================= LIBRARY ================= -->
   <section id="view-library" class="view hidden">
     <div class="lib-head">
-      <h2>词库 <small>50 个词条</small></h2>
+      <h2>词库 <small><span id="libCount">50</span> 个词条</small></h2>
       <input class="search" id="search" placeholder="搜索单词或释义…" autocomplete="off">
     </div>
     <div class="chips" id="filters">
@@ -478,12 +481,17 @@
       <div class="card pad" id="quizSetup">
         <p class="eyebrow">练习</p>
         <h2>单词测试</h2>
-        <p class="muted small">拼写与选择两种模式，每组最多 10 题；答错的词会自动进入复习队列。</p>
+        <p class="muted small">拼写、汉译英、选择三种模式，每组最多 10 题；拼写或汉译英答对 3 次，该词才算学习成功，答错的词会自动进入复习队列。</p>
         <div class="mode-cards">
           <button class="mode-card" data-quiz="spell">
             <span class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2.6"/><path d="M6.2 10h.8M9.7 10h.8M13.2 10h.8M16.7 10h.8M8 13.6h8"/></svg></span>
             <b>拼写测试</b>
             <small>看释义、听发音，把单词完整拼写出来</small>
+          </button>
+          <button class="mode-card" data-quiz="cn2en">
+            <span class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9M8.5 3v2M11 5c0 5-3.5 9-7 11"/><path d="M5 9c1.2 3.4 4.2 6.2 7.5 7.4"/><path d="M13.5 19l4-9 4 9M15.2 15.5h4.6"/></svg></span>
+            <b>汉译英</b>
+            <small>看中文释义，从四个单词中选出正确的一项</small>
           </button>
           <button class="mode-card" data-quiz="choice">
             <span class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3.1"/><path d="M12 2.2v2.4M12 19.4v2.4M2.2 12h2.4M19.4 12h2.4"/></svg></span>
@@ -547,9 +555,18 @@
         <div class="set-row"><span>每日新词数量</span>
           <select id="dailyNew">
             <option value="5">5 词</option>
-            <option value="10">10 词</option>
+            <option value="10" selected>10 词</option>
             <option value="15">15 词</option>
             <option value="20">20 词</option>
+            <option value="0">不限量（全部学完）</option>
+          </select>
+        </div>
+        <div class="set-row"><span>判定「学习成功」所需拼写 / 汉译英正确次数</span>
+          <select id="masterN">
+            <option value="2">2 次</option>
+            <option value="3" selected>3 次</option>
+            <option value="4">4 次</option>
+            <option value="5">5 次</option>
           </select>
         </div>
         <div class="set-row"><span>学习时自动朗读单词</span>
@@ -582,6 +599,7 @@
     <textarea class="note" id="dNote" placeholder="写下记忆方法、近义词、易混点…"></textarea>
     <div class="modal-meta">
       <span id="dSeen">学习 0 次</span>
+      <span id="dProd">拼写 / 汉译英 0 / 3</span>
       <span id="dNext">尚未安排复习</span>
       <button class="link" id="dStar">☆ 加入生词本</button>
     </div>
@@ -644,7 +662,63 @@ const WORDS = [
   {w:"Omit", ipa:"/əˈmɪt/", pos:"v.", def:"省略，删去；遗漏", ex:"You may omit this question.", exZh:"你可以跳过这道题。"},
   {w:"Freezing", ipa:"/ˈfriːzɪŋ/", pos:"adj. / n.", def:"极冷的，冰冻的 / 冰冻，冻结", ex:"It's freezing outside.", exZh:"外面冷极了。"},
   {w:"Thunder", ipa:"/ˈθʌndə/", pos:"n. / v.", def:"雷，雷声；轰隆声 / 打雷；怒吼", ex:"The thunder woke the baby.", exZh:"雷声把婴儿吵醒了。"},
-  {w:"Sample", ipa:"/ˈsɑːmpl/", pos:"n. / v.", def:"样品，样本；抽样 / 抽样；品尝", ex:"They gave out free samples at the store.", exZh:"他们在店里发放免费样品。"}
+  {w:"Sample", ipa:"/ˈsɑːmpl/", pos:"n. / v.", def:"样品，样本；抽样 / 抽样；品尝", ex:"They gave out free samples at the store.", exZh:"他们在店里发放免费样品。"},
+  {w:"Able", ipa:"/ˈeɪbl/", pos:"adj.", def:"能够的，有能力的；能干的", ex:"She is able to solve the problem on her own.", exZh:"她能独立解决这个问题。"},
+  {w:"Degree", ipa:"/dɪˈɡriː/", pos:"n.", def:"程度；度数；学位", ex:"He has a degree in computer science.", exZh:"他拥有计算机科学学位。"},
+  {w:"Level", ipa:"/ˈlevl/", pos:"n. / adj. / v.", def:"水平，级别 / 水平的，平的 / 使平等，瞄准", ex:"The water level is rising fast.", exZh:"水位正在快速上涨。"},
+  {w:"Class", ipa:"/klɑːs/", pos:"n.", def:"班级；课；阶级；类别", ex:"Our class has thirty students.", exZh:"我们班有三十名学生。"},
+  {w:"Classmate", ipa:"/ˈklɑːsmeɪt/", pos:"n.", def:"同班同学", ex:"My classmate lent me her notes.", exZh:"我的同学把笔记借给了我。"},
+  {w:"Combination", ipa:"/ˌkɒmbɪˈneɪʃn/", pos:"n.", def:"结合，组合；联合体", ex:"The dish is a combination of sweet and sour flavours.", exZh:"这道菜是酸甜口味的结合。"},
+  {w:"Commit", ipa:"/kəˈmɪt/", pos:"v.", def:"犯（罪、错）；承诺；投入；提交", ex:"He committed himself to finishing the project.", exZh:"他承诺完成这个项目。"},
+  {w:"Committee", ipa:"/kəˈmɪti/", pos:"n.", def:"委员会", ex:"The committee will meet on Friday.", exZh:"委员会将在周五开会。"},
+  {w:"Compose", ipa:"/kəmˈpəʊz/", pos:"v.", def:"组成；创作（乐曲、诗歌）；使平静", ex:"The orchestra will perform a piece composed by her.", exZh:"乐团将演奏她创作的曲子。"},
+  {w:"Composition", ipa:"/ˌkɒmpəˈzɪʃn/", pos:"n.", def:"构成，成分；作文；作品", ex:"The composition of the atmosphere has changed.", exZh:"大气的成分已经改变。"},
+  {w:"Base", ipa:"/beɪs/", pos:"n. / v.", def:"基础，基底；基地 / 以……为基础", ex:"The company is based in Shanghai.", exZh:"这家公司总部设在上海。"},
+  {w:"Basic", ipa:"/ˈbeɪsɪk/", pos:"adj.", def:"基本的，基础的；最简单的", ex:"You need basic computer skills for this job.", exZh:"这份工作需要基本的电脑技能。"},
+  {w:"Basically", ipa:"/ˈbeɪsɪkli/", pos:"adv.", def:"基本上，大体上；从根本上说", ex:"Basically, the plan is the same as before.", exZh:"基本上，这个计划和之前一样。"},
+  {w:"Surface", ipa:"/ˈsɜːfɪs/", pos:"n. / v.", def:"表面；水面 / 浮现；浮出水面", ex:"The surface of the lake was calm.", exZh:"湖面很平静。"},
+  {w:"Reply", ipa:"/rɪˈplaɪ/", pos:"v. / n.", def:"回答，答复 / 回答", ex:"She replied to my email within an hour.", exZh:"她在一小时内回复了我的邮件。"},
+  {w:"Dawn", ipa:"/dɔːn/", pos:"n. / v.", def:"黎明，拂晓；开端 / 破晓；开始明白", ex:"We left at dawn to avoid the traffic.", exZh:"我们黎明出发以避开交通高峰。"},
+  {w:"Affair", ipa:"/əˈfeə/", pos:"n.", def:"事情，事务；事件；私通", ex:"That's my own affair, not yours.", exZh:"那是我自己的事，与你无关。"},
+  {w:"Regard", ipa:"/rɪˈɡɑːd/", pos:"v. / n.", def:"认为，看待；注视 / 尊重，关心；问候", ex:"She regards him as a close friend.", exZh:"她把他当作亲密的朋友。"},
+  {w:"Announce", ipa:"/əˈnaʊns/", pos:"v.", def:"宣布，宣告；播报", ex:"The company announced a new product yesterday.", exZh:"公司昨天宣布了一款新产品。"},
+  {w:"Announcement", ipa:"/əˈnaʊnsmənt/", pos:"n.", def:"公告，宣布；通知", ex:"Please listen to the announcement carefully.", exZh:"请仔细听通知。"},
+  {w:"Arrest", ipa:"/əˈrest/", pos:"v. / n.", def:"逮捕，拘留；阻止 / 逮捕", ex:"The police arrested two suspects.", exZh:"警方逮捕了两名嫌疑人。"},
+  {w:"Dash", ipa:"/dæʃ/", pos:"v. / n.", def:"猛冲，飞奔；猛撞 / 破折号；短跑", ex:"He dashed across the street to catch the bus.", exZh:"他冲过马路去赶公交车。"},
+  {w:"Plunge", ipa:"/plʌndʒ/", pos:"v. / n.", def:"突然下降；投入，跳入 / 骤降", ex:"Share prices plunged after the news.", exZh:"消息公布后股价暴跌。"},
+  {w:"Crash", ipa:"/kræʃ/", pos:"v. / n.", def:"碰撞，坠毁；（系统）崩溃 / 撞车；巨响", ex:"The system crashed during the update.", exZh:"系统在更新时崩溃了。"},
+  {w:"Flash", ipa:"/flæʃ/", pos:"v. / n.", def:"闪光，闪耀；闪现 / 闪光；一瞬间", ex:"A light flashed in the distance.", exZh:"远处闪过一道光。"},
+  {w:"Assume", ipa:"/əˈsjuːm/", pos:"v.", def:"假定，认为；承担；呈现", ex:"I assume you have read the instructions.", exZh:"我假定你已经读过说明了。"},
+  {w:"Undertake", ipa:"/ˌʌndəˈteɪk/", pos:"v.", def:"承担，从事；承诺，保证", ex:"The team undertook a difficult research project.", exZh:"团队承担了一个艰难的研究项目。"},
+  {w:"Affect", ipa:"/əˈfekt/", pos:"v.", def:"影响；感染；使感动", ex:"The weather can affect your mood.", exZh:"天气会影响你的情绪。"},
+  {w:"Ease", ipa:"/iːz/", pos:"n. / v.", def:"容易；舒适，安逸 / 减轻，缓解", ex:"The medicine eased her pain.", exZh:"这药减轻了她的疼痛。"},
+  {w:"Effect", ipa:"/ɪˈfekt/", pos:"n.", def:"效果，影响；结果", ex:"The new policy had little effect.", exZh:"新政策几乎没有效果。"},
+  {w:"Effective", ipa:"/ɪˈfektɪv/", pos:"adj.", def:"有效的；生效的", ex:"This is an effective way to learn vocabulary.", exZh:"这是学习词汇的有效方法。"},
+  {w:"Efficient", ipa:"/ɪˈfɪʃnt/", pos:"adj.", def:"高效的，效率高的", ex:"She is an efficient worker.", exZh:"她工作效率很高。"},
+  {w:"Efficiency", ipa:"/ɪˈfɪʃnsi/", pos:"n.", def:"效率，功效", ex:"The new machine improved efficiency.", exZh:"新机器提高了效率。"},
+  {w:"Effort", ipa:"/ˈefət/", pos:"n.", def:"努力，尽力；努力的成果", ex:"He made a great effort to finish on time.", exZh:"他为了按时完成付出了巨大努力。"},
+  {w:"Investigate", ipa:"/ɪnˈvestɪɡeɪt/", pos:"v.", def:"调查，研究", ex:"The police are investigating the case.", exZh:"警方正在调查这起案件。"},
+  {w:"Boost", ipa:"/buːst/", pos:"v. / n.", def:"促进，提高；增强 / 推动，增长", ex:"The campaign boosted sales by 20%.", exZh:"这场活动使销售额提高了 20%。"},
+  {w:"Promote", ipa:"/prəˈməʊt/", pos:"v.", def:"促进，推动；提升，晋升；宣传", ex:"She was promoted to manager last year.", exZh:"她去年被提升为经理。"},
+  {w:"Track", ipa:"/træk/", pos:"n. / v.", def:"轨道；踪迹；跑道 / 追踪，跟踪", ex:"The app tracks your daily steps.", exZh:"这个应用会记录你的每日步数。"},
+  {w:"Physical", ipa:"/ˈfɪzɪkl/", pos:"adj.", def:"身体的；物质的；物理的", ex:"Regular physical exercise keeps you healthy.", exZh:"经常进行体育锻炼能让你保持健康。"},
+  {w:"Monitor", ipa:"/ˈmɒnɪtə/", pos:"v. / n.", def:"监控，监测 / 显示器；班长", ex:"Doctors monitored his heart rate all night.", exZh:"医生整夜监测他的心率。"},
+  {w:"Measure", ipa:"/ˈmeʒə/", pos:"v. / n.", def:"测量，衡量 / 措施；尺寸", ex:"We need to measure the room before buying furniture.", exZh:"买家具前我们需要测量房间。"},
+  {w:"Intensely", ipa:"/ɪnˈtensli/", pos:"adv.", def:"强烈地；极度地；专注地", ex:"She stared intensely at the screen.", exZh:"她专注地盯着屏幕。"},
+  {w:"Survey", ipa:"/ˈsɜːveɪ/", pos:"n. / v.", def:"调查，民意调查 / 调查；审视", ex:"The survey shows most students prefer online classes.", exZh:"调查显示大多数学生更喜欢网课。"},
+  {w:"Ownership", ipa:"/ˈəʊnəʃɪp/", pos:"n.", def:"所有权，归属；所有权关系", ex:"The ownership of the land is still in dispute.", exZh:"这块土地的所有权仍有争议。"},
+  {w:"Impact", ipa:"/ˈɪmpækt/", pos:"n. / v.", def:"影响，冲击 / 影响，撞击", ex:"The internet has a huge impact on our lives.", exZh:"互联网对我们的生活有巨大影响。"},
+  {w:"Pronounce", ipa:"/prəˈnaʊns/", pos:"v.", def:"发音；宣布，宣判", ex:"How do you pronounce this word?", exZh:"这个词怎么发音？"},
+  {w:"Obvious", ipa:"/ˈɒbviəs/", pos:"adj.", def:"明显的，显而易见的", ex:"It was obvious that he was lying.", exZh:"很明显他在撒谎。"},
+  {w:"Evidence", ipa:"/ˈevɪdəns/", pos:"n.", def:"证据，证明", ex:"There is no evidence to support the claim.", exZh:"没有证据支持这一说法。"},
+  {w:"Evident", ipa:"/ˈevɪdənt/", pos:"adj.", def:"明显的，明白的", ex:"His disappointment was evident to everyone.", exZh:"他的失望对每个人来说都很明显。"},
+  {w:"Distinct", ipa:"/dɪˈstɪŋkt/", pos:"adj.", def:"不同的；清楚的，明显的", ex:"The two species are quite distinct.", exZh:"这两个物种差异明显。"},
+  {w:"Apparent", ipa:"/əˈpærənt/", pos:"adj.", def:"明显的；表面上的", ex:"It soon became apparent that the plan would fail.", exZh:"很快就能看出这个计划会失败。"},
+  {w:"Increase", ipa:"/ɪnˈkriːs/", pos:"v. / n.", def:"增加，增长 / 增长", ex:"Sales increased by ten percent this year.", exZh:"今年销售额增长了百分之十。"},
+  {w:"Increasingly", ipa:"/ɪnˈkriːsɪŋli/", pos:"adv.", def:"越来越多地，日益", ex:"Work is becoming increasingly stressful.", exZh:"工作压力越来越大。"},
+  {w:"Stuffing", ipa:"/ˈstʌfɪŋ/", pos:"n.", def:"（烹饪）填料，馅；填充物", ex:"She made stuffing for the turkey.", exZh:"她为火鸡做了填料。"},
+  {w:"Stare at", ipa:"/steə æt/", pos:"phr.", def:"盯着看，凝视", ex:"Don't stare at people; it's rude.", exZh:"不要盯着人看，这样不礼貌。"},
+  {w:"Phrase", ipa:"/freɪz/", pos:"n. / v.", def:"短语，词组；措辞 / 用……措辞表达", ex:"Learn the phrase as a whole.", exZh:"把这个短语作为一个整体来记。"}
 ];
 
 /* =========================================================
@@ -656,7 +730,7 @@ const MIN = 60000;
 const IV = [0, 10/1440, 1, 3, 7, 21, 60]; // 各记忆盒间隔（天）
 
 const defaultState = () => ({
-  data: {}, days: {}, settings: { dailyNew: 10, autoSpeak: true, theme: "light" }, recent: []
+  data: {}, days: {}, settings: { dailyNew: 10, masterN: 3, autoSpeak: true, theme: "light" }, recent: []
 });
 let S = defaultState();
 let storageOK = true;
@@ -667,7 +741,7 @@ function load() {
     if (raw) {
       const obj = JSON.parse(raw);
       S = Object.assign(defaultState(), obj);
-      S.settings = Object.assign({ dailyNew: 10, autoSpeak: true, theme: "light" }, obj.settings || {});
+      S.settings = Object.assign({ dailyNew: 10, masterN: 3, autoSpeak: true, theme: "light" }, obj.settings || {});
     }
   } catch (e) { storageOK = false; }
   ensureDay();
@@ -685,13 +759,14 @@ function ensureDay() {
   return S.days[k];
 }
 function wstate(i) {
-  if (!S.data[i]) S.data[i] = { b: 0, due: 0, seen: 0, ok: 0, bad: 0, star: false, note: "" };
+  if (!S.data[i]) S.data[i] = { b: 0, due: 0, seen: 0, ok: 0, bad: 0, prod: 0, star: false, note: "" };
   return S.data[i];
 }
+function masterN() { return S.settings.masterN || 3; }
 function statusOf(st) {
   if (!st.seen) return "new";
-  if (st.b >= 5) return "mastered";
-  if (st.b >= 3) return "familiar";
+  if ((st.prod || 0) >= masterN()) return "mastered";
+  if ((st.prod || 0) >= 1) return "familiar";
   return "learning";
 }
 function humanGap(ms) {
@@ -764,7 +839,7 @@ function computeStats() {
   WORDS.forEach((_, i) => {
     const st = wstate(i);
     if (st.seen) learned++;
-    if (st.b >= 5) mastered++;
+    if ((st.prod || 0) >= masterN()) mastered++;
     if (st.star) star++;
   });
   let ok = 0, bad = 0;
@@ -773,8 +848,11 @@ function computeStats() {
     const st = wstate(i);
     return st.seen > 0 && st.due <= Date.now();
   }).length;
-  const newLeft = Math.max(0, S.settings.dailyNew - (ensureDay().nw || 0));
-  return { learned, mastered, star, ok, bad, due, newLeft, acc: ok + bad ? Math.round(ok / (ok + bad) * 100) : null };
+  const unseen = WORDS.filter((_, i) => !wstate(i).seen).length;
+  const newLeft = S.settings.dailyNew === 0
+    ? unseen
+    : Math.min(unseen, Math.max(0, S.settings.dailyNew - (ensureDay().nw || 0)));
+  return { learned, mastered, star, ok, bad, due, newLeft, unseen, acc: ok + bad ? Math.round(ok / (ok + bad) * 100) : null };
 }
 
 function streakDays() {
@@ -806,9 +884,14 @@ function renderHome() {
   $("ring").style.setProperty("--p", pct);
   $("ringPct").textContent = pct + "%";
 
-  const newDone = Math.min(day.nw || 0, S.settings.dailyNew);
-  $("taskNewTxt").textContent = newDone + " / " + S.settings.dailyNew;
-  $("taskNewBar").style.width = Math.min(100, newDone / S.settings.dailyNew * 100) + "%";
+  if (S.settings.dailyNew === 0) {
+    $("taskNewTxt").textContent = "已学 " + (day.nw || 0) + " 个 · 不限量";
+    $("taskNewBar").style.width = (WORDS.length ? (1 - s.unseen / WORDS.length) * 100 : 0) + "%";
+  } else {
+    const newDone = Math.min(day.nw || 0, S.settings.dailyNew);
+    $("taskNewTxt").textContent = newDone + " / " + S.settings.dailyNew;
+    $("taskNewBar").style.width = Math.min(100, newDone / S.settings.dailyNew * 100) + "%";
+  }
   $("taskRevTxt").textContent = s.due + " 个待复习";
   const revTotal = (day.rv || 0) + s.due;
   $("taskRevBar").style.width = revTotal ? Math.round((day.rv || 0) / revTotal * 100) + "%" : "0%";
@@ -840,10 +923,13 @@ function startStudy(mode) {
   let q = [];
   if (mode === "learn") {
     const day = ensureDay();
-    const limit = Math.max(0, S.settings.dailyNew - (day.nw || 0));
-    q = WORDS.map((_, i) => i).filter(i => wstate(i).b === 0).slice(0, limit);
+    const unlimited = S.settings.dailyNew === 0;
+    const limit = unlimited ? Infinity : Math.max(0, S.settings.dailyNew - (day.nw || 0));
+    q = WORDS.map((_, i) => i)
+      .filter(i => wstate(i).b === 0)
+      .slice(0, limit === Infinity ? undefined : limit);
     if (!q.length) {
-      toast(limit === 0 ? "今日新词已学完，去复习吧" : "词库里的新词都学过了");
+      toast(limit === 0 && !unlimited ? "今日新词已学完，去复习吧" : "词库里的新词都学过了");
       return;
     }
   } else {
@@ -853,7 +939,16 @@ function startStudy(mode) {
       .slice(0, 30);
     if (!q.length) { toast("暂时没有到期的复习，休息一下吧"); return; }
   }
-  study = { mode, queue: q, idx: 0, revealed: false, ok: 0, bad: 0, start: Date.now() };
+  study = {
+    mode,
+    queue: q.map(i => ({ i, rep: 0 })),
+    idx: 0,
+    revealed: false,
+    ok: 0,
+    bad: 0,
+    plan: {},
+    start: Date.now()
+  };
   $("wordCard").classList.remove("hidden");
   $("studyDone").classList.add("hidden");
   $("studyHint").classList.remove("hidden");
@@ -862,18 +957,28 @@ function startStudy(mode) {
 }
 
 function showCard() {
-  const i = study.queue[study.idx];
+  const cur = study.queue[study.idx];
+  const i = cur.i;
   const st = wstate(i);
   const w = WORDS[i];
   study.revealed = false;
-  $("modeTag").textContent = study.mode === "learn" ? "新词" : "复习";
-  $("modeTag").className = "tag" + (study.mode === "review" ? " review" : "");
+  if (cur.rep > 0) {
+    $("modeTag").textContent = "巩固 ×" + cur.rep;
+    $("modeTag").className = "tag review";
+  } else {
+    $("modeTag").textContent = study.mode === "learn" ? "新词" : "复习";
+    $("modeTag").className = "tag" + (study.mode === "review" ? " review" : "");
+  }
   $("wordText").textContent = w.w;
   $("ipaText").textContent = w.ipa;
   $("posText").textContent = w.pos;
   $("defText").textContent = w.def;
   $("exEn").textContent = w.ex;
   $("exZh").textContent = w.exZh;
+  const prod = st.prod || 0;
+  $("prodText").innerHTML = prod >= masterN()
+    ? "拼写 / 汉译英 <b>" + prod + " / " + masterN() + "</b> · 已学习成功 ✓"
+    : "拼写 / 汉译英正确 <b>" + prod + " / " + masterN() + "</b> 次后判定学习成功";
   $("starToggle").textContent = st.star ? "★" : "☆";
   $("starToggle").style.color = st.star ? "#f59e0b" : "";
   $("revealBox").classList.remove("hidden");
@@ -894,42 +999,63 @@ function reveal() {
   $("answerBox").classList.remove("hidden");
 }
 
+function scheduleRetry(i, want) {
+  study.plan = study.plan || {};
+  const planned = study.plan[i] || 0;
+  const target = Math.min(3, want);
+  for (let k = planned; k < target; k++) {
+    const gap = 2 + k * 3 + Math.floor(Math.random() * 3); // 2–4、5–7、8–10 张之后
+    const pos = Math.min(study.queue.length, study.idx + 1 + gap);
+    study.queue.splice(pos, 0, { i, rep: k + 1 });
+  }
+  study.plan[i] = Math.max(planned, target);
+}
+
 function rate(q) {
   if (!study || !study.revealed) return;
-  const i = study.queue[study.idx];
+  const cur = study.queue[study.idx];
+  const i = cur.i;
+  const rep = cur.rep;
   const st = wstate(i);
   const day = ensureDay();
   const now = Date.now();
-  let gap;
-  if (q === 0) {
-    st.b = 1; gap = 10 * MIN; st.bad++; day.bad++; study.bad++;
-    study.retried = study.retried || {};
-    if (!study.retried[i]) { study.retried[i] = 1; study.queue.push(i); }
+  let gap = 10 * MIN;
+
+  if (q === 0) { st.bad++; day.bad++; study.bad++; }
+  else if (q === 1) { st.bad++; day.bad++; study.bad++; }
+  else { st.ok++; day.ok++; study.ok++; }
+
+  if (rep === 0) {
+    if (q === 0) { st.b = 1; gap = 10 * MIN; }
+    else if (q === 1) {
+      st.b = Math.max(1, st.b - 1);
+      gap = st.b <= 1 ? 10 * MIN : (st.b === 2 ? DAY : 3 * DAY);
+    } else if (q === 2) {
+      st.b = Math.min(6, st.b + 1);
+      gap = IV[st.b] * DAY;
+    } else {
+      st.b = Math.min(6, st.b + 2);
+      gap = IV[st.b] * DAY;
+    }
+    if (!st.seen) {
+      st.seen = 1;
+      if (study.mode === "learn") day.nw = (day.nw || 0) + 1;
+    } else {
+      st.seen++;
+      if (study.mode === "review") day.rv = (day.rv || 0) + 1;
+    }
+    st.due = now + gap;
+    if (q === 0) scheduleRetry(i, 3);
+    else if (q === 1) scheduleRetry(i, 2);
+  } else if (q < 2) {
+    st.b = 1;
+    st.due = now + 10 * MIN;
   }
-  else if (q === 1) {
-    st.b = Math.max(1, st.b - 1);
-    gap = st.b <= 1 ? 10 * MIN : (st.b === 2 ? DAY : 3 * DAY);
-    st.bad++; day.bad++; study.bad++;
-  } else if (q === 2) {
-    st.b = Math.min(6, st.b + 1);
-    gap = IV[st.b] * DAY;
-    st.ok++; day.ok++; study.ok++;
-  } else {
-    st.b = Math.min(6, st.b + 2);
-    gap = IV[st.b] * DAY;
-    st.ok++; day.ok++; study.ok++;
-  }
-  if (!st.seen) {
-    st.seen = 1;
-    if (study.mode === "learn") day.nw = (day.nw || 0) + 1;
-  } else {
-    st.seen++;
-    if (study.mode === "review") day.rv = (day.rv || 0) + 1;
-  }
-  st.due = now + gap;
+
   S.recent = [i, ...S.recent.filter(x => x !== i)].slice(0, 8);
   save();
-  if (q === 0) toast("记错啦，本组稍后还会出现");
+  if (q === 0) toast("记错啦，本组会再考你几次");
+  else if (q === 1) toast("有点模糊，稍后再巩固");
   else toast(gap >= DAY ? "安排 " + Math.round(gap / DAY) + " 天后复习" : "10 分钟后再复习");
   nextCard();
 }
@@ -951,8 +1077,9 @@ function finishStudy() {
   $("studyDone").classList.remove("hidden");
   const total = study.ok + study.bad;
   const mins = Math.max(1, Math.round((Date.now() - study.start) / MIN));
-  const unique = new Set(study.queue).size;
-  $("doneStats").textContent = `学习 ${unique} 个词 · 用时 ${mins} 分钟 · 正确率 ${total ? Math.round(study.ok / total * 100) : 0}%`;
+  const unique = new Set(study.queue.map(x => x.i)).size;
+  const reps = study.queue.length - unique;
+  $("doneStats").textContent = `学习 ${unique} 个词 · 巩固 ${reps} 次 · 用时 ${mins} 分钟 · 正确率 ${total ? Math.round(study.ok / total * 100) : 0}%`;
   renderHome();
 }
 
@@ -967,8 +1094,8 @@ function renderLibrary() {
     const st = wstate(i);
     if (libFilter === "starred" && !st.star) return false;
     if (libFilter === "new" && st.seen) return false;
-    if (libFilter === "learning" && !(st.seen && st.b < 5)) return false;
-    if (libFilter === "mastered" && st.b < 5) return false;
+    if (libFilter === "learning" && !(st.seen && (st.prod || 0) < masterN())) return false;
+    if (libFilter === "mastered" && (st.prod || 0) < masterN()) return false;
     if (kw && !(w.w.toLowerCase().includes(kw) || w.def.includes(kw))) return false;
     return true;
   });
@@ -1012,6 +1139,8 @@ function openDetail(i) {
   $("dExZh").textContent = w.exZh;
   $("dNote").value = st.note || "";
   $("dSeen").textContent = "学习 " + (st.seen || 0) + " 次";
+  const prod = st.prod || 0;
+  $("dProd").textContent = "拼写 / 汉译英 " + prod + " / " + masterN() + (prod >= masterN() ? " · 已学习成功" : "");
   $("dNext").textContent = st.seen ? (st.due <= Date.now() ? "已到复习时间" : "下次复习：" + humanGap(st.due - Date.now())) : "尚未安排复习";
   $("dStar").textContent = st.star ? "★ 已在生词本" : "☆ 加入生词本";
   $("modal").classList.remove("hidden");
@@ -1038,7 +1167,7 @@ function quizPoolSize() {
 function renderQuizSetup() {
   const n = quizPoolSize();
   $("quizPoolNote").textContent = n > 0
-    ? "可出题范围：已学 " + n + " 词"
+    ? "可出题范围：已学 " + n + " 词 · 拼写或汉译英答对 " + masterN() + " 次即判定学习成功"
     : "尚未学习，将从全部 " + WORDS.length + " 词中随机出题";
   $("quizSetup").classList.remove("hidden");
   $("quizRun").classList.add("hidden");
@@ -1046,12 +1175,16 @@ function renderQuizSetup() {
 }
 function startQuiz(kind) {
   const learned = WORDS.map((_, i) => i).filter(i => wstate(i).seen > 0);
-  const pool = learned.length >= 4 ? learned : WORDS.map((_, i) => i);
+  const all = WORDS.map((_, i) => i);
+  const need = learned.filter(i => (wstate(i).prod || 0) < masterN());
+  const pool = kind === "choice"
+    ? (learned.length >= 4 ? learned : all)
+    : (need.length >= 4 ? need : (learned.length >= 4 ? learned : all));
   const picked = shuffled(pool).slice(0, Math.min(10, pool.length));
   const qs = picked.map(i => {
     if (kind === "spell") return { type: "spell", i };
-    const askWord = Math.random() < 0.6;
-    const others = shuffled(WORDS.map((_, j) => j).filter(j => j !== i)).slice(0, 3);
+    const askWord = kind === "cn2en" ? false : Math.random() < 0.6;
+    const others = shuffled(all.filter(j => j !== i)).slice(0, 3);
     return { type: "choice", i, askWord, options: shuffled([i, ...others]) };
   });
   quiz = { kind, qs, i: 0, score: 0, answered: false, wrong: [] };
@@ -1128,6 +1261,18 @@ function showQuestion() {
     body.appendChild(opts);
   }
 }
+function bumpProd(i) {
+  const st = wstate(i);
+  if (!st.seen) st.seen = 1;
+  const before = st.prod || 0;
+  st.prod = before + 1;
+  save();
+  if (before < masterN() && st.prod >= masterN()) {
+    toast("「" + WORDS[i].w + "」已学习成功 🎉");
+    return true;
+  }
+  return false;
+}
 function submitSpell() {
   const input = $("spellInput");
   if (!input || quiz.answered) return;
@@ -1143,8 +1288,11 @@ function submitSpell() {
   const fb = $("quizFeedback");
   if (good) {
     quiz.score++; wstate(q.i).ok++; day.ok++;
+    const done = bumpProd(q.i);
     fb.className = "feedback ok";
-    fb.innerHTML = "回答正确 ✓";
+    fb.innerHTML = "回答正确 ✓" + (done
+      ? " · 该词已学习成功 🎉"
+      : " · 拼写正确 " + (wstate(q.i).prod || 0) + " / " + masterN());
     fb.classList.remove("hidden");
   } else {
     wstate(q.i).bad++; day.bad++;
@@ -1167,7 +1315,14 @@ function answerChoice(btn, j) {
   const fb = $("quizFeedback");
   if (correct) {
     quiz.score++; btn.classList.add("correct"); wstate(q.i).ok++; day.ok++;
-    fb.className = "feedback ok"; fb.innerHTML = "回答正确 ✓";
+    let extra = "";
+    if (!q.askWord) {
+      const done = bumpProd(q.i);
+      extra = done
+        ? " · 该词已学习成功 🎉"
+        : " · 汉译英正确 " + (wstate(q.i).prod || 0) + " / " + masterN();
+    }
+    fb.className = "feedback ok"; fb.innerHTML = "回答正确 ✓" + extra;
   } else {
     btn.classList.add("wrong");
     $$("#quizBody .option").forEach(b => {
@@ -1270,6 +1425,7 @@ function renderStats() {
   });
   $("masterySum").textContent = "共 " + WORDS.length + " 词";
   $("dailyNew").value = String(S.settings.dailyNew);
+  $("masterN").value = String(masterN());
   $("autoSpeak").classList.toggle("on", !!S.settings.autoSpeak);
 }
 
@@ -1300,11 +1456,11 @@ function bind() {
   $("btnDoneReview").onclick = () => startStudy("review");
   $("btnDoneHome").onclick = () => { renderHome(); go("home"); };
   $$(".rate").forEach(b => b.onclick = () => rate(Number(b.dataset.q)));
-  $("speakWord").onclick = () => { const i = study && study.queue[study.idx]; if (i != null) speak(WORDS[i].w); };
-  $("speakEx").onclick = () => { const i = study && study.queue[study.idx]; if (i != null) speak(WORDS[i].ex); };
+  $("speakWord").onclick = () => { const cur = study && study.queue[study.idx]; if (cur) speak(WORDS[cur.i].w); };
+  $("speakEx").onclick = () => { const cur = study && study.queue[study.idx]; if (cur) speak(WORDS[cur.i].ex); };
   $("starToggle").onclick = () => {
-    const i = study.queue[study.idx];
-    const st = wstate(i);
+    const cur = study.queue[study.idx];
+    const st = wstate(cur.i);
     st.star = !st.star;
     $("starToggle").textContent = st.star ? "★" : "☆";
     $("starToggle").style.color = st.star ? "#f59e0b" : "";
@@ -1345,7 +1501,16 @@ function bind() {
     noteTimer = setTimeout(() => { wstate(idx).note = val; save(); }, 400);
   };
 
-  $("dailyNew").onchange = (e) => { S.settings.dailyNew = Number(e.target.value); save(); renderHome(); toast("已设置每日 " + e.target.value + " 词"); };
+  $("dailyNew").onchange = (e) => {
+    S.settings.dailyNew = Number(e.target.value);
+    save(); renderHome();
+    toast(S.settings.dailyNew === 0 ? "已设置为不限量，学完为止" : "已设置每日 " + e.target.value + " 词");
+  };
+  $("masterN").onchange = (e) => {
+    S.settings.masterN = Number(e.target.value);
+    save(); renderStats();
+    toast("已设置：拼写 / 汉译英答对 " + e.target.value + " 次判定学习成功");
+  };
   $("autoSpeak").onclick = () => {
     S.settings.autoSpeak = !S.settings.autoSpeak;
     $("autoSpeak").classList.toggle("on", S.settings.autoSpeak);
@@ -1379,6 +1544,9 @@ function bind() {
    ========================================================= */
 load();
 applyTheme(S.settings.theme || "light");
+$("brandCount").textContent = WORDS.length;
+$("libCount").textContent = WORDS.length;
+$("statTotal").textContent = WORDS.length;
 bind();
 renderHome();
 if (!storageOK) toast("浏览器限制本地存储，本次学习记录可能无法保存");
