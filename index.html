@@ -432,7 +432,7 @@
           <span class="pos" id="posText"></span>
           <p class="def" id="defText"></p>
         </div>
-        <div class="example">
+        <div class="example" id="exampleBox">
           <p class="ex-en"><span id="exEn"></span><button id="speakEx" aria-label="播放例句">🔊</button></p>
           <p class="ex-zh" id="exZh"></p>
         </div>
@@ -482,6 +482,13 @@
         <p class="eyebrow">练习</p>
         <h2>单词测试</h2>
         <p class="muted small">拼写、汉译英、选择三种模式，每组最多 10 题；拼写或汉译英答对 3 次，该词才算学习成功，答错的词会自动进入复习队列。</p>
+        <div class="field" style="margin:16px 0 4px">
+          <label>题目音标</label>
+          <div class="chips" id="ipaChips">
+            <button class="chip active" data-ipa="on">显示音标</button>
+            <button class="chip" data-ipa="off">隐藏音标</button>
+          </div>
+        </div>
         <div class="mode-cards">
           <button class="mode-card" data-quiz="spell">
             <span class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2.6"/><path d="M6.2 10h.8M9.7 10h.8M13.2 10h.8M16.7 10h.8M8 13.6h8"/></svg></span>
@@ -591,7 +598,7 @@
       <button class="icon-btn" id="dSpeak" aria-label="播放发音">🔊</button>
     </div>
     <p class="modal-def"><span class="pos" id="dPos"></span> <span id="dDef"></span></p>
-    <div class="modal-ex">
+    <div class="modal-ex" id="dExample">
       <p class="ex-en"><span id="dEx"></span><button id="dSpeakEx" aria-label="播放例句">🔊</button></p>
       <p class="ex-zh" id="dExZh"></p>
     </div>
@@ -718,7 +725,166 @@ const WORDS = [
   {w:"Increasingly", ipa:"/ɪnˈkriːsɪŋli/", pos:"adv.", def:"越来越多地，日益", ex:"Work is becoming increasingly stressful.", exZh:"工作压力越来越大。"},
   {w:"Stuffing", ipa:"/ˈstʌfɪŋ/", pos:"n.", def:"（烹饪）填料，馅；填充物", ex:"She made stuffing for the turkey.", exZh:"她为火鸡做了填料。"},
   {w:"Stare at", ipa:"/steə æt/", pos:"phr.", def:"盯着看，凝视", ex:"Don't stare at people; it's rude.", exZh:"不要盯着人看，这样不礼貌。"},
-  {w:"Phrase", ipa:"/freɪz/", pos:"n. / v.", def:"短语，词组；措辞 / 用……措辞表达", ex:"Learn the phrase as a whole.", exZh:"把这个短语作为一个整体来记。"}
+  {w:"Phrase", ipa:"/freɪz/", pos:"n. / v.", def:"短语，词组；措辞 / 用……措辞表达", ex:"Learn the phrase as a whole.", exZh:"把这个短语作为一个整体来记。"},
+  {w:"Chemical", ipa:"/ˈkemɪkl/", pos:"adj. / n.", def:"化学的 / 化学品", ex:"", exZh:""},
+  {w:"Budget", ipa:"/ˈbʌdʒɪt/", pos:"n. / v.", def:"预算 / 编制预算", ex:"", exZh:""},
+  {w:"Lung", ipa:"/lʌŋ/", pos:"n.", def:"肺", ex:"", exZh:""},
+  {w:"Rush", ipa:"/rʌʃ/", pos:"v. / n.", def:"冲，急速行动 / 匆忙", ex:"", exZh:""},
+  {w:"Tale", ipa:"/teɪl/", pos:"n.", def:"故事，传说", ex:"", exZh:""},
+  {w:"Revise", ipa:"/rɪˈvaɪz/", pos:"v.", def:"修订，修改；复习", ex:"", exZh:""},
+  {w:"Highway", ipa:"/ˈhaɪweɪ/", pos:"n.", def:"公路", ex:"", exZh:""},
+  {w:"Rapid", ipa:"/ˈræpɪd/", pos:"adj.", def:"迅速的，快速的", ex:"", exZh:""},
+  {w:"Nail", ipa:"/neɪl/", pos:"n. / v.", def:"钉子；指甲 / 钉住", ex:"", exZh:""},
+  {w:"Pigeon", ipa:"/ˈpɪdʒɪn/", pos:"n.", def:"鸽子", ex:"", exZh:""},
+  {w:"Palace", ipa:"/ˈpæləs/", pos:"n.", def:"宫殿", ex:"", exZh:""},
+  {w:"Tuition", ipa:"/tjuˈɪʃn/", pos:"n.", def:"学费；教学", ex:"", exZh:""},
+  {w:"Rocket", ipa:"/ˈrɒkɪt/", pos:"n.", def:"火箭", ex:"", exZh:""},
+  {w:"Bleed", ipa:"/bliːd/", pos:"v.", def:"流血", ex:"", exZh:""},
+  {w:"Flat", ipa:"/flæt/", pos:"adj. / n.", def:"平的，水平的 / 公寓（英）", ex:"", exZh:""},
+  {w:"Dentist", ipa:"/ˈdentɪst/", pos:"n.", def:"牙科医生", ex:"", exZh:""},
+  {w:"Core", ipa:"/kɔː/", pos:"n.", def:"核心，果核", ex:"", exZh:""},
+  {w:"Fuel", ipa:"/ˈfjuːəl/", pos:"n. / v.", def:"燃料 / 加燃料", ex:"", exZh:""},
+  {w:"Citizen", ipa:"/ˈsɪtɪzn/", pos:"n.", def:"市民，公民", ex:"", exZh:""},
+  {w:"Radar", ipa:"/ˈreɪdɑː/", pos:"n.", def:"雷达", ex:"", exZh:""},
+  {w:"Lend", ipa:"/lend/", pos:"v.", def:"借出", ex:"", exZh:""},
+  {w:"Cable", ipa:"/ˈkeɪbl/", pos:"n.", def:"电缆，缆绳", ex:"", exZh:""},
+  {w:"Petrol", ipa:"/ˈpetrəl/", pos:"n.", def:"汽油（英）", ex:"", exZh:""},
+  {w:"Gasoline", ipa:"/ˈɡæsəliːn/", pos:"n.", def:"汽油（美）", ex:"", exZh:""},
+  {w:"Tablet", ipa:"/ˈtæblət/", pos:"n.", def:"平板电脑；药片", ex:"", exZh:""},
+  {w:"Decade", ipa:"/ˈdekeɪd/", pos:"n.", def:"十年", ex:"", exZh:""},
+  {w:"Selfish", ipa:"/ˈselfɪʃ/", pos:"adj.", def:"自私的", ex:"", exZh:""},
+  {w:"Scan", ipa:"/skæn/", pos:"v. / n.", def:"扫描；浏览 / 扫描", ex:"", exZh:""},
+  {w:"Tube", ipa:"/tjuːb/", pos:"n.", def:"管，隧道；地铁（英）", ex:"", exZh:""},
+  {w:"Therefore", ipa:"/ˈðeəfɔː/", pos:"adv.", def:"因此，所以", ex:"", exZh:""},
+  {w:"Unfortunately", ipa:"/ʌnˈfɔːtʃənətli/", pos:"adv.", def:"不幸地，遗憾地", ex:"", exZh:""},
+  {w:"Slice", ipa:"/slaɪs/", pos:"n. / v.", def:"薄片 / 切片", ex:"", exZh:""},
+  {w:"Clerk", ipa:"/klɑːk/", pos:"n.", def:"办事员，职员", ex:"", exZh:""},
+  {w:"Coach", ipa:"/kəʊtʃ/", pos:"n.", def:"教练；长途客车", ex:"", exZh:""},
+  {w:"Shore", ipa:"/ʃɔː/", pos:"n.", def:"岸，滨", ex:"", exZh:""},
+  {w:"Rural", ipa:"/ˈrʊərəl/", pos:"adj.", def:"乡下的，乡村的", ex:"", exZh:""},
+  {w:"Pilot", ipa:"/ˈpaɪlət/", pos:"n. / v.", def:"飞行员 / 驾驶，试验", ex:"", exZh:""},
+  {w:"Tape", ipa:"/teɪp/", pos:"n. / v.", def:"带子，磁带 / 录音", ex:"", exZh:""},
+  {w:"Jam", ipa:"/dʒæm/", pos:"n. / v.", def:"果酱 / 塞满，卡住", ex:"", exZh:""},
+  {w:"Bloom", ipa:"/bluːm/", pos:"v. / n.", def:"开花，繁荣 / 花", ex:"", exZh:""},
+  {w:"Trick", ipa:"/trɪk/", pos:"n. / v.", def:"诡计 / 欺骗", ex:"", exZh:""},
+  {w:"Tricky", ipa:"/ˈtrɪki/", pos:"adj.", def:"难以捉摸的，棘手的", ex:"", exZh:""},
+  {w:"In the hope of", ipa:"/ɪn ðə həʊp ɒv/", pos:"phr.", def:"怀着……的希望", ex:"", exZh:""},
+  {w:"Head office", ipa:"/hed ˈɒfɪs/", pos:"phr.", def:"总公司", ex:"", exZh:""},
+  {w:"Weigh", ipa:"/weɪ/", pos:"v.", def:"称重；重达", ex:"", exZh:""},
+  {w:"Head for", ipa:"/hed fɔː/", pos:"phr.", def:"前往，出发去", ex:"", exZh:""},
+  {w:"Headache", ipa:"/ˈhedeɪk/", pos:"n.", def:"头疼", ex:"", exZh:""},
+  {w:"Headline", ipa:"/ˈhedlaɪn/", pos:"n.", def:"头条新闻", ex:"", exZh:""},
+  {w:"Headquarters", ipa:"/ˌhedˈkwɔːtəz/", pos:"n.", def:"总部", ex:"", exZh:""},
+  {w:"Trace", ipa:"/treɪs/", pos:"n. / v.", def:"踪迹 / 追踪", ex:"", exZh:""},
+  {w:"Trace back to", ipa:"/treɪs bæk tuː/", pos:"phr.", def:"追溯到", ex:"", exZh:""},
+  {w:"Smooth", ipa:"/smuːð/", pos:"adj.", def:"光滑的；顺利的", ex:"", exZh:""},
+  {w:"Or so", ipa:"/ɔː səʊ/", pos:"phr.", def:"大约，左右", ex:"", exZh:""},
+  {w:"And so on/forth", ipa:"/ənd səʊ ɒn/", pos:"phr.", def:"等等", ex:"", exZh:""},
+  {w:"So far", ipa:"/səʊ fɑː/", pos:"phr.", def:"迄今为止", ex:"", exZh:""},
+  {w:"So as to", ipa:"/səʊ æz tuː/", pos:"phr.", def:"为了，以便", ex:"", exZh:""},
+  {w:"Couple", ipa:"/ˈkʌpl/", pos:"n.", def:"两个，几个；夫妇", ex:"", exZh:""},
+  {w:"Oral", ipa:"/ˈɔːrəl/", pos:"adj.", def:"口头的", ex:"", exZh:""},
+  {w:"Review", ipa:"/rɪˈvjuː/", pos:"n. / v.", def:"回顾，复习；评论 / 复习", ex:"", exZh:""},
+  {w:"Tone", ipa:"/təʊn/", pos:"n.", def:"语气，音调；风格", ex:"", exZh:""},
+  {w:"The rest", ipa:"/ðə rest/", pos:"phr.", def:"剩余部分，其余部分", ex:"", exZh:""},
+  {w:"Restless", ipa:"/ˈrestləs/", pos:"adj.", def:"得不到休息的，不安宁的", ex:"", exZh:""},
+  {w:"Tip", ipa:"/tɪp/", pos:"n. / v.", def:"尖端；小费 / 倾斜", ex:"", exZh:""},
+  {w:"Troop", ipa:"/truːp/", pos:"n.", def:"一群；军队，部队", ex:"", exZh:""},
+  {w:"Target", ipa:"/ˈtɑːɡɪt/", pos:"n.", def:"靶子，目标", ex:"", exZh:""},
+  {w:"Sort out", ipa:"/sɔːt aʊt/", pos:"phr.", def:"整理，分类；解决", ex:"", exZh:""},
+  {w:"Other than", ipa:"/ˈʌðə ðæn/", pos:"phr.", def:"除了", ex:"", exZh:""},
+  {w:"The other day", ipa:"/ði ˈʌðə deɪ/", pos:"phr.", def:"不久前的某天", ex:"", exZh:""},
+  {w:"At times", ipa:"/ət taɪmz/", pos:"phr.", def:"有时", ex:"", exZh:""},
+  {w:"For the time being", ipa:"/fɔː ðə taɪm ˈbiːɪŋ/", pos:"phr.", def:"暂时", ex:"", exZh:""},
+  {w:"From time to time", ipa:"/frəm taɪm tuː taɪm/", pos:"phr.", def:"有时，不时", ex:"", exZh:""},
+  {w:"In no time", ipa:"/ɪn nəʊ taɪm/", pos:"phr.", def:"立即，马上", ex:"", exZh:""},
+  {w:"Once upon a time", ipa:"/wʌns əˈpɒn ə taɪm/", pos:"phr.", def:"从前", ex:"", exZh:""},
+  {w:"Take one's time", ipa:"/teɪk wʌnz taɪm/", pos:"phr.", def:"从容不迫，慢慢来", ex:"", exZh:""},
+  {w:"Iron", ipa:"/ˈaɪən/", pos:"n. / v.", def:"铁；熨斗 / 熨烫", ex:"", exZh:""},
+  {w:"Sow", ipa:"/səʊ/", pos:"v.", def:"播种", ex:"", exZh:""},
+  {w:"By way of", ipa:"/baɪ weɪ ɒv/", pos:"phr.", def:"通过……方法；经由", ex:"", exZh:""},
+  {w:"In a way", ipa:"/ɪn ə weɪ/", pos:"phr.", def:"在某种意义上", ex:"", exZh:""},
+  {w:"In the way", ipa:"/ɪn ðə weɪ/", pos:"phr.", def:"挡道", ex:"", exZh:""},
+  {w:"Under way", ipa:"/ˈʌndə weɪ/", pos:"phr.", def:"在进行中", ex:"", exZh:""},
+  {w:"Make way", ipa:"/meɪk weɪ/", pos:"phr.", def:"让路", ex:"", exZh:""},
+  {w:"Make one's way", ipa:"/meɪk wʌnz weɪ/", pos:"phr.", def:"行进，前往", ex:"", exZh:""},
+  {w:"Garbage", ipa:"/ˈɡɑːbɪdʒ/", pos:"n.", def:"垃圾", ex:"", exZh:""},
+  {w:"Source", ipa:"/sɔːs/", pos:"n.", def:"来源，源头", ex:"", exZh:""},
+  {w:"Meet", ipa:"/miːt/", pos:"v.", def:"遇见；满足", ex:"", exZh:""},
+  {w:"Hold", ipa:"/həʊld/", pos:"v.", def:"握住；容纳；举行", ex:"", exZh:""},
+  {w:"Bury", ipa:"/ˈberi/", pos:"v.", def:"埋葬；掩埋", ex:"", exZh:""},
+  {w:"Dump", ipa:"/dʌmp/", pos:"v. / n.", def:"倾倒 / 垃圾场", ex:"", exZh:""},
+  {w:"Coal", ipa:"/kəʊl/", pos:"n.", def:"煤", ex:"", exZh:""},
+  {w:"Petroleum", ipa:"/pəˈtrəʊliəm/", pos:"n.", def:"石油", ex:"", exZh:""},
+  {w:"Gas", ipa:"/ɡæs/", pos:"n.", def:"气体；汽油", ex:"", exZh:""},
+  {w:"Scarce", ipa:"/skeəs/", pos:"adj.", def:"稀少的，缺乏的", ex:"", exZh:""},
+  {w:"Fossil fuel", ipa:"/ˈfɒsl fjuːəl/", pos:"phr.", def:"化石燃料", ex:"", exZh:""},
+  {w:"Supply", ipa:"/səˈplaɪ/", pos:"n. / v.", def:"供应，供给", ex:"", exZh:""},
+  {w:"Steam", ipa:"/stiːm/", pos:"n.", def:"蒸汽", ex:"", exZh:""},
+  {w:"Power plant", ipa:"/ˈpaʊə plɑːnt/", pos:"phr.", def:"发电厂", ex:"", exZh:""},
+  {w:"Barrel", ipa:"/ˈbærəl/", pos:"n.", def:"桶", ex:"", exZh:""},
+  {w:"Separate", ipa:"/ˈsepəreɪt/", pos:"v. / adj.", def:"分开 / 单独的", ex:"", exZh:""},
+  {w:"Metal", ipa:"/ˈmetl/", pos:"n.", def:"金属", ex:"", exZh:""},
+  {w:"Process", ipa:"/ˈprəʊses/", pos:"n. / v.", def:"过程 / 处理", ex:"", exZh:""},
+  {w:"Pile up", ipa:"/paɪl ʌp/", pos:"phr.", def:"堆积", ex:"", exZh:""},
+  {w:"Pile", ipa:"/paɪl/", pos:"n. / v.", def:"堆 / 堆放", ex:"", exZh:""},
+  {w:"Take up", ipa:"/teɪk ʌp/", pos:"phr.", def:"占用；开始从事", ex:"", exZh:""},
+  {w:"Account for", ipa:"/əˈkaʊnt fɔː/", pos:"phr.", def:"解释；占（比例）", ex:"", exZh:""},
+  {w:"Get on well with...", ipa:"/ɡet ɒn wel wɪð/", pos:"phr.", def:"与……相处融洽", ex:"", exZh:""},
+  {w:"Overseas", ipa:"/ˌəʊvəˈsiːz/", pos:"adj. / adv.", def:"海外的 / 在海外", ex:"", exZh:""},
+  {w:"Illegally", ipa:"/ɪˈliːɡəli/", pos:"adv.", def:"非法地", ex:"", exZh:""},
+  {w:"Legal", ipa:"/ˈliːɡl/", pos:"adj.", def:"合法的；法律的", ex:"", exZh:""},
+  {w:"Private", ipa:"/ˈpraɪvət/", pos:"adj.", def:"私人的，私有的", ex:"", exZh:""},
+  {w:"Collector", ipa:"/kəˈlektə/", pos:"n.", def:"收藏家；收集者", ex:"", exZh:""},
+  {w:"Treasure", ipa:"/ˈtreʒə/", pos:"n. / v.", def:"宝藏 / 珍视", ex:"", exZh:""},
+  {w:"Own", ipa:"/əʊn/", pos:"adj. / v.", def:"自己的 / 拥有", ex:"", exZh:""},
+  {w:"Major", ipa:"/ˈmeɪdʒə/", pos:"adj. / n.", def:"主要的 / 专业", ex:"", exZh:""},
+  {w:"Recover", ipa:"/rɪˈkʌvə/", pos:"v.", def:"恢复；找回", ex:"", exZh:""},
+  {w:"In the same case", ipa:"/ɪn ðə seɪm keɪs/", pos:"phr.", def:"在同样的情况下", ex:"", exZh:""},
+  {w:"Donate", ipa:"/dəʊˈneɪt/", pos:"v.", def:"捐赠", ex:"", exZh:""},
+  {w:"Turn to", ipa:"/tɜːn tuː/", pos:"phr.", def:"求助于；转向", ex:"", exZh:""},
+  {w:"Channel", ipa:"/ˈtʃænl/", pos:"n.", def:"频道；渠道；海峡", ex:"", exZh:""},
+  {w:"Demand", ipa:"/dɪˈmɑːnd/", pos:"n. / v.", def:"需求 / 要求", ex:"", exZh:""},
+  {w:"Priceless", ipa:"/ˈpraɪsləs/", pos:"adj.", def:"无价的，极珍贵的", ex:"", exZh:""},
+  {w:"Bronze", ipa:"/brɒnz/", pos:"n.", def:"青铜；青铜色", ex:"", exZh:""},
+  {w:"Entrepreneur", ipa:"/ˌɒntrəprəˈnɜː/", pos:"n.", def:"企业家", ex:"", exZh:""},
+  {w:"Precious", ipa:"/ˈpreʃəs/", pos:"adj.", def:"珍贵的", ex:"", exZh:""},
+  {w:"Recovery", ipa:"/rɪˈkʌvəri/", pos:"n.", def:"恢复；复苏", ex:"", exZh:""},
+  {w:"Set up", ipa:"/set ʌp/", pos:"phr.", def:"建立，设立", ex:"", exZh:""},
+  {w:"Database", ipa:"/ˈdeɪtəbeɪs/", pos:"n.", def:"数据库", ex:"", exZh:""},
+  {w:"Relevant", ipa:"/ˈreləvənt/", pos:"adj.", def:"相关的", ex:"", exZh:""},
+  {w:"Sign", ipa:"/saɪn/", pos:"n. / v.", def:"标志 / 签名", ex:"", exZh:""},
+  {w:"Infer", ipa:"/ɪnˈfɜː/", pos:"v.", def:"推断", ex:"", exZh:""},
+  {w:"Vary", ipa:"/ˈveəri/", pos:"v.", def:"变化，不同", ex:"", exZh:""},
+  {w:"Court", ipa:"/kɔːt/", pos:"n.", def:"法院；球场；宫廷", ex:"", exZh:""},
+  {w:"Get rid of", ipa:"/ɡet rɪd ɒv/", pos:"phr.", def:"摆脱，除去", ex:"", exZh:""},
+  {w:"Standard", ipa:"/ˈstændəd/", pos:"n. / adj.", def:"标准 / 标准的", ex:"", exZh:""},
+  {w:"In addition", ipa:"/ɪn əˈdɪʃn/", pos:"phr.", def:"另外，此外", ex:"", exZh:""},
+  {w:"A set of", ipa:"/ə set ɒv/", pos:"phr.", def:"一套，一组", ex:"", exZh:""},
+  {w:"Movable", ipa:"/ˈmuːvəbl/", pos:"adj.", def:"可移动的", ex:"", exZh:""},
+  {w:"Post", ipa:"/pəʊst/", pos:"n. / v.", def:"邮政；职位 / 邮寄", ex:"", exZh:""},
+  {w:"Concentration", ipa:"/ˌkɒnsnˈtreɪʃn/", pos:"n.", def:"专注；浓度", ex:"", exZh:""},
+  {w:"Concentrate on", ipa:"/ˈkɒnsntreɪt ɒn/", pos:"phr.", def:"专注于", ex:"", exZh:""},
+  {w:"Injure", ipa:"/ˈɪndʒə/", pos:"v.", def:"伤害", ex:"", exZh:""},
+  {w:"Urge", ipa:"/ɜːdʒ/", pos:"v. / n.", def:"敦促 / 冲动", ex:"", exZh:""},
+  {w:"Involve", ipa:"/ɪnˈvɒlv/", pos:"v.", def:"涉及；使参与", ex:"", exZh:""},
+  {w:"Attend", ipa:"/əˈtend/", pos:"v.", def:"出席；照料", ex:"", exZh:""},
+  {w:"Financial", ipa:"/faɪˈnænʃl/", pos:"adj.", def:"财务的，金融的", ex:"", exZh:""},
+  {w:"Undergraduate", ipa:"/ˌʌndəˈɡrædʒuət/", pos:"n.", def:"本科生", ex:"", exZh:""},
+  {w:"Application", ipa:"/ˌæplɪˈkeɪʃn/", pos:"n.", def:"申请；应用", ex:"", exZh:""},
+  {w:"Proof", ipa:"/pruːf/", pos:"n.", def:"证据，证明", ex:"", exZh:""},
+  {w:"Ensure", ipa:"/ɪnˈʃʊə/", pos:"v.", def:"确保", ex:"", exZh:""},
+  {w:"Procedure", ipa:"/prəˈsiːdʒə/", pos:"n.", def:"程序，步骤", ex:"", exZh:""},
+  {w:"Statement", ipa:"/ˈsteɪtmənt/", pos:"n.", def:"陈述；报表", ex:"", exZh:""},
+  {w:"Issue", ipa:"/ˈɪʃuː/", pos:"n. / v.", def:"问题；期号 / 发布", ex:"", exZh:""},
+  {w:"Occasionally", ipa:"/əˈkeɪʒnəli/", pos:"adv.", def:"偶尔", ex:"", exZh:""},
+  {w:"Generally", ipa:"/ˈdʒenrəli/", pos:"adv.", def:"通常，一般地", ex:"", exZh:""},
+  {w:"Variety", ipa:"/vəˈraɪəti/", pos:"n.", def:"多样性；种类", ex:"", exZh:""},
+  {w:"Sort", ipa:"/sɔːt/", pos:"n. / v.", def:"种类 / 分类", ex:"", exZh:""},
+  {w:"A variety of", ipa:"/ə vəˈraɪəti ɒv/", pos:"phr.", def:"各种各样的", ex:"", exZh:""},
+  {w:"Financial assistance", ipa:"/faɪˈnænʃl əˈsɪstəns/", pos:"phr.", def:"经济援助", ex:"", exZh:""},
+  {w:"Various", ipa:"/ˈveəriəs/", pos:"adj.", def:"各种各样的", ex:"", exZh:""},
+  {w:"Accommodation", ipa:"/əˌkɒməˈdeɪʃn/", pos:"n.", def:"住宿，膳宿", ex:"", exZh:""}
 ];
 
 /* =========================================================
@@ -730,7 +896,7 @@ const MIN = 60000;
 const IV = [0, 10/1440, 1, 3, 7, 21, 60]; // 各记忆盒间隔（天）
 
 const defaultState = () => ({
-  data: {}, days: {}, settings: { dailyNew: 10, masterN: 3, autoSpeak: true, theme: "light" }, recent: []
+  data: {}, days: {}, settings: { dailyNew: 10, masterN: 3, autoSpeak: true, showIpa: true, theme: "light" }, recent: []
 });
 let S = defaultState();
 let storageOK = true;
@@ -741,7 +907,7 @@ function load() {
     if (raw) {
       const obj = JSON.parse(raw);
       S = Object.assign(defaultState(), obj);
-      S.settings = Object.assign({ dailyNew: 10, masterN: 3, autoSpeak: true, theme: "light" }, obj.settings || {});
+      S.settings = Object.assign({ dailyNew: 10, masterN: 3, autoSpeak: true, showIpa: true, theme: "light" }, obj.settings || {});
     }
   } catch (e) { storageOK = false; }
   ensureDay();
@@ -975,6 +1141,7 @@ function showCard() {
   $("defText").textContent = w.def;
   $("exEn").textContent = w.ex;
   $("exZh").textContent = w.exZh;
+  $("exampleBox").classList.toggle("hidden", !w.ex);
   const prod = st.prod || 0;
   $("prodText").innerHTML = prod >= masterN()
     ? "拼写 / 汉译英 <b>" + prod + " / " + masterN() + "</b> · 已学习成功 ✓"
@@ -1137,6 +1304,7 @@ function openDetail(i) {
   $("dDef").textContent = w.def;
   $("dEx").textContent = w.ex;
   $("dExZh").textContent = w.exZh;
+  $("dExample").classList.toggle("hidden", !w.ex);
   $("dNote").value = st.note || "";
   $("dSeen").textContent = "学习 " + (st.seen || 0) + " 次";
   const prod = st.prod || 0;
@@ -1213,7 +1381,7 @@ function showQuestion() {
     stem.appendChild(p);
     const ipa = document.createElement("div");
     ipa.className = "quiz-ipa";
-    ipa.innerHTML = '<span>' + esc(w.pos) + '</span><span>' + esc(w.ipa) + '</span><button class="icon-btn" id="quizSpeak" aria-label="播放发音">🔊</button>';
+    ipa.innerHTML = '<span>' + esc(w.pos) + '</span>' + (S.settings.showIpa !== false ? '<span>' + esc(w.ipa) + '</span>' : '') + '<button class="icon-btn" id="quizSpeak" aria-label="播放发音">🔊</button>';
     stem.appendChild(ipa);
     ipa.querySelector("#quizSpeak").onclick = () => speak(w.w);
     const row = document.createElement("div");
@@ -1226,7 +1394,7 @@ function showQuestion() {
     speak(w.w);
   } else if (q.askWord) {
     $("quizKind").textContent = "选择正确的释义";
-    stem.innerHTML = '<p class="quiz-word">' + esc(w.w) + '</p><div class="quiz-ipa"><span>' + esc(w.ipa) + '</span><button class="icon-btn" id="quizSpeak" aria-label="播放发音">🔊</button></div>';
+    stem.innerHTML = '<p class="quiz-word">' + esc(w.w) + '</p><div class="quiz-ipa">' + (S.settings.showIpa !== false ? '<span>' + esc(w.ipa) + '</span>' : '') + '<button class="icon-btn" id="quizSpeak" aria-label="播放发音">🔊</button></div>';
     stem.querySelector("#quizSpeak").onclick = () => speak(w.w);
     const opts = document.createElement("div");
     opts.className = "options";
@@ -1247,7 +1415,7 @@ function showQuestion() {
     stem.appendChild(p);
     const ipa = document.createElement("div");
     ipa.className = "quiz-ipa";
-    ipa.innerHTML = '<span>' + esc(w.pos) + '</span><span>' + esc(w.ipa) + '</span>';
+    ipa.innerHTML = '<span>' + esc(w.pos) + '</span>' + (S.settings.showIpa !== false ? '<span>' + esc(w.ipa) + '</span>' : '');
     stem.appendChild(ipa);
     const opts = document.createElement("div");
     opts.className = "options";
@@ -1442,8 +1610,10 @@ function applyTheme(t) {
 /* =========================================================
    事件绑定
    ========================================================= */
-function bind() {
-  $$("#tabs button").forEach(b => b.onclick = () => go(b.dataset.view));
+function syncIpaChips(){
+  $$("#ipaChips .chip").forEach(c => c.classList.toggle("active", (c.dataset.ipa === "on") === (S.settings.showIpa !== false)));
+}
+function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.dataset.view));
   $("themeBtn").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
   $("btnLearn").onclick = () => startStudy("learn");
   $("btnReview").onclick = () => startStudy("review");
@@ -1478,6 +1648,13 @@ function bind() {
   });
 
   $$(".mode-card").forEach(b => b.onclick = () => startQuiz(b.dataset.quiz));
+  $$("#ipaChips .chip").forEach(c => c.onclick = () => {
+    S.settings.showIpa = c.dataset.ipa === "on";
+    save();
+    syncIpaChips();
+    toast(S.settings.showIpa ? "已开启音标" : "已隐藏音标");
+  });
+  syncIpaChips();
   $("quizNext").onclick = nextQuestion;
   $("quizAgain").onclick = () => startQuiz(quiz.kind);
   $("quizBack").onclick = () => { renderHome(); go("home"); };
