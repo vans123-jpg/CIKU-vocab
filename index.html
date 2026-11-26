@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>拾词 · 英语词库</title>
+<title>拾词 · 英语词库与语法</title>
+<meta name="description" content="拾词：304 个专升本英语词条 + 68 道语法题，支持单词测试、语法专项、艾宾浩斯复习与生词本。">
+<meta property="og:title" content="拾词 · 英语词库与语法">
+<meta property="og:description" content="304 词 + 68 道语法题，单词与语法一站式刷题。">
+<meta property="og:type" content="website">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234f46e5'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='sans-serif'%3E拾%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -234,6 +241,13 @@
   .quiz-word{font-family:Georgia,serif;font-size:44px;margin:6px 0 0;letter-spacing:-.5px}
   .quiz-ipa{color:var(--muted);font-size:14px;display:flex;gap:8px;align-items:center}
   .g-stem{font-size:17px;line-height:1.75;margin:2px 0 18px}
+  .fill-row{display:flex;gap:10px;margin-top:16px;align-items:center}
+  .fill-row .spell-input{flex:1}
+  .rule-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:12px}
+  .rule-card{border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:var(--bg)}
+  .rule-card b{display:block;font-size:14.5px;margin-bottom:6px;color:var(--ink)}
+  .rule-card p{margin:0 0 8px;font-size:12.5px;line-height:1.55;color:var(--muted)}
+  .rule-card em{font-size:12px;color:var(--brand);font-style:normal;line-height:1.5;display:block}
   .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
   .option{
     border:1px solid var(--line);background:var(--card);border-radius:14px;padding:14px 16px;text-align:left;
@@ -405,8 +419,13 @@
           <div class="task-row"><span>生词本待巩固</span><b id="taskStarTxt">0 个</b></div>
           <div class="bar"><i id="taskStarBar"></i></div>
         </div>
+        <div class="task">
+          <div class="task-row"><span>语法练习</span><b id="taskGramTxt">0 / 5</b></div>
+          <div class="bar"><i id="taskGramBar"></i></div>
+        </div>
         <div style="display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap">
           <button class="btn primary" id="btnPlan">开始今日计划</button>
+          <button class="btn outline" id="btnGram">练 5 题语法</button>
           <span class="muted small" id="planHint"></span>
         </div>
       </div>
@@ -579,16 +598,21 @@
         <button class="chip" data-cat="非谓语">非谓语</button>
         <button class="chip" data-cat="句法">句法</button>
       </div>
-      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin:14px 0">
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin:14px 0">
         <div class="card stat"><small>已做</small><b id="gDoneNum">0</b><span id="gTotalNum">/ 68 题</span></div>
         <div class="card stat"><small>正确率</small><b id="gRate">—</b><span>累计作答</span></div>
+        <div class="card stat"><small>待复习</small><b id="gDueNum">0</b><span>按记忆曲线</span></div>
         <div class="card stat"><small>语法错题</small><b id="gWrongNum">0</b><span>待巩固</span></div>
       </div>
       <div class="cta">
         <button class="btn primary" id="gStart">开始语法练习</button>
+        <button class="btn outline" id="gReview">今日复习 <span class="badge" id="gDueBadge">0</span></button>
         <button class="btn outline" id="gWrongBtn">错题重练 <span class="badge" id="gWrongBadge">0</span></button>
       </div>
-      <p class="muted small" style="margin:14px 0 0">共 68 题：词法 20 · 动词 16 · 非谓语 12 · 句法 20；同一题连续答对 2 次移出错题本。</p>
+      <p class="muted small" style="margin:14px 0 0">共 84 题：词法 22 · 动词 22 · 非谓语 14 · 句法 26，含单选、语法填空与改错辨析；答对进入下一记忆节点，答错收入错题本并回到起点。</p>
+
+      <div class="task-head" style="margin-top:24px"><h3>语法速记卡</h3><span class="muted small">口诀 + 例句，先记规则再刷题</span></div>
+      <div class="rule-grid" id="ruleGrid"></div>
     </div>
 
     <div id="gRun" class="hidden">
@@ -671,11 +695,18 @@
         <div class="set-row"><span>学习时自动朗读单词</span>
           <button class="switch" id="autoSpeak" aria-label="自动朗读"></button>
         </div>
+        <div class="set-row"><span>备份 / 恢复学习数据（换设备不丢失）</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn outline" id="exportBtn">导出</button>
+            <button class="btn outline" id="importBtn">导入</button>
+          </div>
+        </div>
         <div class="set-row"><span>清空全部学习记录（不可恢复）</span>
           <button class="danger" id="resetBtn">清空数据</button>
         </div>
       </div>
     </div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
   </section>
 </main>
 
@@ -818,165 +849,165 @@ const WORDS = [
   {w:"Stuffing", ipa:"/ˈstʌfɪŋ/", pos:"n.", def:"（烹饪）填料，馅；填充物", ex:"She made stuffing for the turkey.", exZh:"她为火鸡做了填料。"},
   {w:"Stare at", ipa:"/steə æt/", pos:"phr.", def:"盯着看，凝视", ex:"Don't stare at people; it's rude.", exZh:"不要盯着人看，这样不礼貌。"},
   {w:"Phrase", ipa:"/freɪz/", pos:"n. / v.", def:"短语，词组；措辞 / 用……措辞表达", ex:"Learn the phrase as a whole.", exZh:"把这个短语作为一个整体来记。"},
-  {w:"Chemical", ipa:"/ˈkemɪkl/", pos:"adj. / n.", def:"化学的 / 化学品", ex:"", exZh:""},
-  {w:"Budget", ipa:"/ˈbʌdʒɪt/", pos:"n. / v.", def:"预算 / 编制预算", ex:"", exZh:""},
-  {w:"Lung", ipa:"/lʌŋ/", pos:"n.", def:"肺", ex:"", exZh:""},
-  {w:"Rush", ipa:"/rʌʃ/", pos:"v. / n.", def:"冲，急速行动 / 匆忙", ex:"", exZh:""},
-  {w:"Tale", ipa:"/teɪl/", pos:"n.", def:"故事，传说", ex:"", exZh:""},
-  {w:"Revise", ipa:"/rɪˈvaɪz/", pos:"v.", def:"修订，修改；复习", ex:"", exZh:""},
-  {w:"Highway", ipa:"/ˈhaɪweɪ/", pos:"n.", def:"公路", ex:"", exZh:""},
-  {w:"Rapid", ipa:"/ˈræpɪd/", pos:"adj.", def:"迅速的，快速的", ex:"", exZh:""},
-  {w:"Nail", ipa:"/neɪl/", pos:"n. / v.", def:"钉子；指甲 / 钉住", ex:"", exZh:""},
-  {w:"Pigeon", ipa:"/ˈpɪdʒɪn/", pos:"n.", def:"鸽子", ex:"", exZh:""},
-  {w:"Palace", ipa:"/ˈpæləs/", pos:"n.", def:"宫殿", ex:"", exZh:""},
-  {w:"Tuition", ipa:"/tjuˈɪʃn/", pos:"n.", def:"学费；教学", ex:"", exZh:""},
-  {w:"Rocket", ipa:"/ˈrɒkɪt/", pos:"n.", def:"火箭", ex:"", exZh:""},
-  {w:"Bleed", ipa:"/bliːd/", pos:"v.", def:"流血", ex:"", exZh:""},
-  {w:"Flat", ipa:"/flæt/", pos:"adj. / n.", def:"平的，水平的 / 公寓（英）", ex:"", exZh:""},
-  {w:"Dentist", ipa:"/ˈdentɪst/", pos:"n.", def:"牙科医生", ex:"", exZh:""},
-  {w:"Core", ipa:"/kɔː/", pos:"n.", def:"核心，果核", ex:"", exZh:""},
-  {w:"Fuel", ipa:"/ˈfjuːəl/", pos:"n. / v.", def:"燃料 / 加燃料", ex:"", exZh:""},
-  {w:"Citizen", ipa:"/ˈsɪtɪzn/", pos:"n.", def:"市民，公民", ex:"", exZh:""},
-  {w:"Radar", ipa:"/ˈreɪdɑː/", pos:"n.", def:"雷达", ex:"", exZh:""},
-  {w:"Lend", ipa:"/lend/", pos:"v.", def:"借出", ex:"", exZh:""},
-  {w:"Cable", ipa:"/ˈkeɪbl/", pos:"n.", def:"电缆，缆绳", ex:"", exZh:""},
-  {w:"Petrol", ipa:"/ˈpetrəl/", pos:"n.", def:"汽油（英）", ex:"", exZh:""},
-  {w:"Gasoline", ipa:"/ˈɡæsəliːn/", pos:"n.", def:"汽油（美）", ex:"", exZh:""},
-  {w:"Tablet", ipa:"/ˈtæblət/", pos:"n.", def:"平板电脑；药片", ex:"", exZh:""},
-  {w:"Decade", ipa:"/ˈdekeɪd/", pos:"n.", def:"十年", ex:"", exZh:""},
-  {w:"Selfish", ipa:"/ˈselfɪʃ/", pos:"adj.", def:"自私的", ex:"", exZh:""},
-  {w:"Scan", ipa:"/skæn/", pos:"v. / n.", def:"扫描；浏览 / 扫描", ex:"", exZh:""},
-  {w:"Tube", ipa:"/tjuːb/", pos:"n.", def:"管，隧道；地铁（英）", ex:"", exZh:""},
-  {w:"Therefore", ipa:"/ˈðeəfɔː/", pos:"adv.", def:"因此，所以", ex:"", exZh:""},
-  {w:"Unfortunately", ipa:"/ʌnˈfɔːtʃənətli/", pos:"adv.", def:"不幸地，遗憾地", ex:"", exZh:""},
-  {w:"Slice", ipa:"/slaɪs/", pos:"n. / v.", def:"薄片 / 切片", ex:"", exZh:""},
-  {w:"Clerk", ipa:"/klɑːk/", pos:"n.", def:"办事员，职员", ex:"", exZh:""},
-  {w:"Coach", ipa:"/kəʊtʃ/", pos:"n.", def:"教练；长途客车", ex:"", exZh:""},
-  {w:"Shore", ipa:"/ʃɔː/", pos:"n.", def:"岸，滨", ex:"", exZh:""},
-  {w:"Rural", ipa:"/ˈrʊərəl/", pos:"adj.", def:"乡下的，乡村的", ex:"", exZh:""},
-  {w:"Pilot", ipa:"/ˈpaɪlət/", pos:"n. / v.", def:"飞行员 / 驾驶，试验", ex:"", exZh:""},
-  {w:"Tape", ipa:"/teɪp/", pos:"n. / v.", def:"带子，磁带 / 录音", ex:"", exZh:""},
-  {w:"Jam", ipa:"/dʒæm/", pos:"n. / v.", def:"果酱 / 塞满，卡住", ex:"", exZh:""},
-  {w:"Bloom", ipa:"/bluːm/", pos:"v. / n.", def:"开花，繁荣 / 花", ex:"", exZh:""},
-  {w:"Trick", ipa:"/trɪk/", pos:"n. / v.", def:"诡计 / 欺骗", ex:"", exZh:""},
-  {w:"Tricky", ipa:"/ˈtrɪki/", pos:"adj.", def:"难以捉摸的，棘手的", ex:"", exZh:""},
-  {w:"In the hope of", ipa:"/ɪn ðə həʊp ɒv/", pos:"phr.", def:"怀着……的希望", ex:"", exZh:""},
-  {w:"Head office", ipa:"/hed ˈɒfɪs/", pos:"phr.", def:"总公司", ex:"", exZh:""},
-  {w:"Weigh", ipa:"/weɪ/", pos:"v.", def:"称重；重达", ex:"", exZh:""},
-  {w:"Head for", ipa:"/hed fɔː/", pos:"phr.", def:"前往，出发去", ex:"", exZh:""},
-  {w:"Headache", ipa:"/ˈhedeɪk/", pos:"n.", def:"头疼", ex:"", exZh:""},
-  {w:"Headline", ipa:"/ˈhedlaɪn/", pos:"n.", def:"头条新闻", ex:"", exZh:""},
-  {w:"Headquarters", ipa:"/ˌhedˈkwɔːtəz/", pos:"n.", def:"总部", ex:"", exZh:""},
-  {w:"Trace", ipa:"/treɪs/", pos:"n. / v.", def:"踪迹 / 追踪", ex:"", exZh:""},
-  {w:"Trace back to", ipa:"/treɪs bæk tuː/", pos:"phr.", def:"追溯到", ex:"", exZh:""},
-  {w:"Smooth", ipa:"/smuːð/", pos:"adj.", def:"光滑的；顺利的", ex:"", exZh:""},
-  {w:"Or so", ipa:"/ɔː səʊ/", pos:"phr.", def:"大约，左右", ex:"", exZh:""},
-  {w:"And so on/forth", ipa:"/ənd səʊ ɒn/", pos:"phr.", def:"等等", ex:"", exZh:""},
-  {w:"So far", ipa:"/səʊ fɑː/", pos:"phr.", def:"迄今为止", ex:"", exZh:""},
-  {w:"So as to", ipa:"/səʊ æz tuː/", pos:"phr.", def:"为了，以便", ex:"", exZh:""},
-  {w:"Couple", ipa:"/ˈkʌpl/", pos:"n.", def:"两个，几个；夫妇", ex:"", exZh:""},
-  {w:"Oral", ipa:"/ˈɔːrəl/", pos:"adj.", def:"口头的", ex:"", exZh:""},
-  {w:"Review", ipa:"/rɪˈvjuː/", pos:"n. / v.", def:"回顾，复习；评论 / 复习", ex:"", exZh:""},
-  {w:"Tone", ipa:"/təʊn/", pos:"n.", def:"语气，音调；风格", ex:"", exZh:""},
-  {w:"The rest", ipa:"/ðə rest/", pos:"phr.", def:"剩余部分，其余部分", ex:"", exZh:""},
-  {w:"Restless", ipa:"/ˈrestləs/", pos:"adj.", def:"得不到休息的，不安宁的", ex:"", exZh:""},
-  {w:"Tip", ipa:"/tɪp/", pos:"n. / v.", def:"尖端；小费 / 倾斜", ex:"", exZh:""},
-  {w:"Troop", ipa:"/truːp/", pos:"n.", def:"一群；军队，部队", ex:"", exZh:""},
-  {w:"Target", ipa:"/ˈtɑːɡɪt/", pos:"n.", def:"靶子，目标", ex:"", exZh:""},
-  {w:"Sort out", ipa:"/sɔːt aʊt/", pos:"phr.", def:"整理，分类；解决", ex:"", exZh:""},
-  {w:"Other than", ipa:"/ˈʌðə ðæn/", pos:"phr.", def:"除了", ex:"", exZh:""},
-  {w:"The other day", ipa:"/ði ˈʌðə deɪ/", pos:"phr.", def:"不久前的某天", ex:"", exZh:""},
-  {w:"At times", ipa:"/ət taɪmz/", pos:"phr.", def:"有时", ex:"", exZh:""},
-  {w:"For the time being", ipa:"/fɔː ðə taɪm ˈbiːɪŋ/", pos:"phr.", def:"暂时", ex:"", exZh:""},
-  {w:"From time to time", ipa:"/frəm taɪm tuː taɪm/", pos:"phr.", def:"有时，不时", ex:"", exZh:""},
-  {w:"In no time", ipa:"/ɪn nəʊ taɪm/", pos:"phr.", def:"立即，马上", ex:"", exZh:""},
-  {w:"Once upon a time", ipa:"/wʌns əˈpɒn ə taɪm/", pos:"phr.", def:"从前", ex:"", exZh:""},
-  {w:"Take one's time", ipa:"/teɪk wʌnz taɪm/", pos:"phr.", def:"从容不迫，慢慢来", ex:"", exZh:""},
-  {w:"Iron", ipa:"/ˈaɪən/", pos:"n. / v.", def:"铁；熨斗 / 熨烫", ex:"", exZh:""},
-  {w:"Sow", ipa:"/səʊ/", pos:"v.", def:"播种", ex:"", exZh:""},
-  {w:"By way of", ipa:"/baɪ weɪ ɒv/", pos:"phr.", def:"通过……方法；经由", ex:"", exZh:""},
-  {w:"In a way", ipa:"/ɪn ə weɪ/", pos:"phr.", def:"在某种意义上", ex:"", exZh:""},
-  {w:"In the way", ipa:"/ɪn ðə weɪ/", pos:"phr.", def:"挡道", ex:"", exZh:""},
-  {w:"Under way", ipa:"/ˈʌndə weɪ/", pos:"phr.", def:"在进行中", ex:"", exZh:""},
-  {w:"Make way", ipa:"/meɪk weɪ/", pos:"phr.", def:"让路", ex:"", exZh:""},
-  {w:"Make one's way", ipa:"/meɪk wʌnz weɪ/", pos:"phr.", def:"行进，前往", ex:"", exZh:""},
-  {w:"Garbage", ipa:"/ˈɡɑːbɪdʒ/", pos:"n.", def:"垃圾", ex:"", exZh:""},
-  {w:"Source", ipa:"/sɔːs/", pos:"n.", def:"来源，源头", ex:"", exZh:""},
-  {w:"Meet", ipa:"/miːt/", pos:"v.", def:"遇见；满足", ex:"", exZh:""},
-  {w:"Hold", ipa:"/həʊld/", pos:"v.", def:"握住；容纳；举行", ex:"", exZh:""},
-  {w:"Bury", ipa:"/ˈberi/", pos:"v.", def:"埋葬；掩埋", ex:"", exZh:""},
-  {w:"Dump", ipa:"/dʌmp/", pos:"v. / n.", def:"倾倒 / 垃圾场", ex:"", exZh:""},
-  {w:"Coal", ipa:"/kəʊl/", pos:"n.", def:"煤", ex:"", exZh:""},
-  {w:"Petroleum", ipa:"/pəˈtrəʊliəm/", pos:"n.", def:"石油", ex:"", exZh:""},
-  {w:"Gas", ipa:"/ɡæs/", pos:"n.", def:"气体；汽油", ex:"", exZh:""},
-  {w:"Scarce", ipa:"/skeəs/", pos:"adj.", def:"稀少的，缺乏的", ex:"", exZh:""},
-  {w:"Fossil fuel", ipa:"/ˈfɒsl fjuːəl/", pos:"phr.", def:"化石燃料", ex:"", exZh:""},
-  {w:"Supply", ipa:"/səˈplaɪ/", pos:"n. / v.", def:"供应，供给", ex:"", exZh:""},
-  {w:"Steam", ipa:"/stiːm/", pos:"n.", def:"蒸汽", ex:"", exZh:""},
-  {w:"Power plant", ipa:"/ˈpaʊə plɑːnt/", pos:"phr.", def:"发电厂", ex:"", exZh:""},
-  {w:"Barrel", ipa:"/ˈbærəl/", pos:"n.", def:"桶", ex:"", exZh:""},
-  {w:"Separate", ipa:"/ˈsepəreɪt/", pos:"v. / adj.", def:"分开 / 单独的", ex:"", exZh:""},
-  {w:"Metal", ipa:"/ˈmetl/", pos:"n.", def:"金属", ex:"", exZh:""},
-  {w:"Process", ipa:"/ˈprəʊses/", pos:"n. / v.", def:"过程 / 处理", ex:"", exZh:""},
-  {w:"Pile up", ipa:"/paɪl ʌp/", pos:"phr.", def:"堆积", ex:"", exZh:""},
-  {w:"Pile", ipa:"/paɪl/", pos:"n. / v.", def:"堆 / 堆放", ex:"", exZh:""},
-  {w:"Take up", ipa:"/teɪk ʌp/", pos:"phr.", def:"占用；开始从事", ex:"", exZh:""},
-  {w:"Account for", ipa:"/əˈkaʊnt fɔː/", pos:"phr.", def:"解释；占（比例）", ex:"", exZh:""},
-  {w:"Get on well with...", ipa:"/ɡet ɒn wel wɪð/", pos:"phr.", def:"与……相处融洽", ex:"", exZh:""},
-  {w:"Overseas", ipa:"/ˌəʊvəˈsiːz/", pos:"adj. / adv.", def:"海外的 / 在海外", ex:"", exZh:""},
-  {w:"Illegally", ipa:"/ɪˈliːɡəli/", pos:"adv.", def:"非法地", ex:"", exZh:""},
-  {w:"Legal", ipa:"/ˈliːɡl/", pos:"adj.", def:"合法的；法律的", ex:"", exZh:""},
-  {w:"Private", ipa:"/ˈpraɪvət/", pos:"adj.", def:"私人的，私有的", ex:"", exZh:""},
-  {w:"Collector", ipa:"/kəˈlektə/", pos:"n.", def:"收藏家；收集者", ex:"", exZh:""},
-  {w:"Treasure", ipa:"/ˈtreʒə/", pos:"n. / v.", def:"宝藏 / 珍视", ex:"", exZh:""},
-  {w:"Own", ipa:"/əʊn/", pos:"adj. / v.", def:"自己的 / 拥有", ex:"", exZh:""},
-  {w:"Major", ipa:"/ˈmeɪdʒə/", pos:"adj. / n.", def:"主要的 / 专业", ex:"", exZh:""},
-  {w:"Recover", ipa:"/rɪˈkʌvə/", pos:"v.", def:"恢复；找回", ex:"", exZh:""},
-  {w:"In the same case", ipa:"/ɪn ðə seɪm keɪs/", pos:"phr.", def:"在同样的情况下", ex:"", exZh:""},
-  {w:"Donate", ipa:"/dəʊˈneɪt/", pos:"v.", def:"捐赠", ex:"", exZh:""},
-  {w:"Turn to", ipa:"/tɜːn tuː/", pos:"phr.", def:"求助于；转向", ex:"", exZh:""},
-  {w:"Channel", ipa:"/ˈtʃænl/", pos:"n.", def:"频道；渠道；海峡", ex:"", exZh:""},
-  {w:"Demand", ipa:"/dɪˈmɑːnd/", pos:"n. / v.", def:"需求 / 要求", ex:"", exZh:""},
-  {w:"Priceless", ipa:"/ˈpraɪsləs/", pos:"adj.", def:"无价的，极珍贵的", ex:"", exZh:""},
-  {w:"Bronze", ipa:"/brɒnz/", pos:"n.", def:"青铜；青铜色", ex:"", exZh:""},
-  {w:"Entrepreneur", ipa:"/ˌɒntrəprəˈnɜː/", pos:"n.", def:"企业家", ex:"", exZh:""},
-  {w:"Precious", ipa:"/ˈpreʃəs/", pos:"adj.", def:"珍贵的", ex:"", exZh:""},
-  {w:"Recovery", ipa:"/rɪˈkʌvəri/", pos:"n.", def:"恢复；复苏", ex:"", exZh:""},
-  {w:"Set up", ipa:"/set ʌp/", pos:"phr.", def:"建立，设立", ex:"", exZh:""},
-  {w:"Database", ipa:"/ˈdeɪtəbeɪs/", pos:"n.", def:"数据库", ex:"", exZh:""},
-  {w:"Relevant", ipa:"/ˈreləvənt/", pos:"adj.", def:"相关的", ex:"", exZh:""},
-  {w:"Sign", ipa:"/saɪn/", pos:"n. / v.", def:"标志 / 签名", ex:"", exZh:""},
-  {w:"Infer", ipa:"/ɪnˈfɜː/", pos:"v.", def:"推断", ex:"", exZh:""},
-  {w:"Vary", ipa:"/ˈveəri/", pos:"v.", def:"变化，不同", ex:"", exZh:""},
-  {w:"Court", ipa:"/kɔːt/", pos:"n.", def:"法院；球场；宫廷", ex:"", exZh:""},
-  {w:"Get rid of", ipa:"/ɡet rɪd ɒv/", pos:"phr.", def:"摆脱，除去", ex:"", exZh:""},
-  {w:"Standard", ipa:"/ˈstændəd/", pos:"n. / adj.", def:"标准 / 标准的", ex:"", exZh:""},
-  {w:"In addition", ipa:"/ɪn əˈdɪʃn/", pos:"phr.", def:"另外，此外", ex:"", exZh:""},
-  {w:"A set of", ipa:"/ə set ɒv/", pos:"phr.", def:"一套，一组", ex:"", exZh:""},
-  {w:"Movable", ipa:"/ˈmuːvəbl/", pos:"adj.", def:"可移动的", ex:"", exZh:""},
-  {w:"Post", ipa:"/pəʊst/", pos:"n. / v.", def:"邮政；职位 / 邮寄", ex:"", exZh:""},
-  {w:"Concentration", ipa:"/ˌkɒnsnˈtreɪʃn/", pos:"n.", def:"专注；浓度", ex:"", exZh:""},
-  {w:"Concentrate on", ipa:"/ˈkɒnsntreɪt ɒn/", pos:"phr.", def:"专注于", ex:"", exZh:""},
-  {w:"Injure", ipa:"/ˈɪndʒə/", pos:"v.", def:"伤害", ex:"", exZh:""},
-  {w:"Urge", ipa:"/ɜːdʒ/", pos:"v. / n.", def:"敦促 / 冲动", ex:"", exZh:""},
-  {w:"Involve", ipa:"/ɪnˈvɒlv/", pos:"v.", def:"涉及；使参与", ex:"", exZh:""},
-  {w:"Attend", ipa:"/əˈtend/", pos:"v.", def:"出席；照料", ex:"", exZh:""},
-  {w:"Financial", ipa:"/faɪˈnænʃl/", pos:"adj.", def:"财务的，金融的", ex:"", exZh:""},
-  {w:"Undergraduate", ipa:"/ˌʌndəˈɡrædʒuət/", pos:"n.", def:"本科生", ex:"", exZh:""},
-  {w:"Application", ipa:"/ˌæplɪˈkeɪʃn/", pos:"n.", def:"申请；应用", ex:"", exZh:""},
-  {w:"Proof", ipa:"/pruːf/", pos:"n.", def:"证据，证明", ex:"", exZh:""},
-  {w:"Ensure", ipa:"/ɪnˈʃʊə/", pos:"v.", def:"确保", ex:"", exZh:""},
-  {w:"Procedure", ipa:"/prəˈsiːdʒə/", pos:"n.", def:"程序，步骤", ex:"", exZh:""},
-  {w:"Statement", ipa:"/ˈsteɪtmənt/", pos:"n.", def:"陈述；报表", ex:"", exZh:""},
-  {w:"Issue", ipa:"/ˈɪʃuː/", pos:"n. / v.", def:"问题；期号 / 发布", ex:"", exZh:""},
-  {w:"Occasionally", ipa:"/əˈkeɪʒnəli/", pos:"adv.", def:"偶尔", ex:"", exZh:""},
-  {w:"Generally", ipa:"/ˈdʒenrəli/", pos:"adv.", def:"通常，一般地", ex:"", exZh:""},
-  {w:"Variety", ipa:"/vəˈraɪəti/", pos:"n.", def:"多样性；种类", ex:"", exZh:""},
-  {w:"Sort", ipa:"/sɔːt/", pos:"n. / v.", def:"种类 / 分类", ex:"", exZh:""},
-  {w:"A variety of", ipa:"/ə vəˈraɪəti ɒv/", pos:"phr.", def:"各种各样的", ex:"", exZh:""},
-  {w:"Financial assistance", ipa:"/faɪˈnænʃl əˈsɪstəns/", pos:"phr.", def:"经济援助", ex:"", exZh:""},
-  {w:"Various", ipa:"/ˈveəriəs/", pos:"adj.", def:"各种各样的", ex:"", exZh:""},
-  {w:"Accommodation", ipa:"/əˌkɒməˈdeɪʃn/", pos:"n.", def:"住宿，膳宿", ex:"", exZh:""},
+  {w:"Chemical", ipa:"/ˈkemɪkl/", pos:"adj. / n.", def:"化学的 / 化学品", ex:"Chemicals can be harmful to the environment.", exZh:"化学品可能对环境有害。"},
+  {w:"Budget", ipa:"/ˈbʌdʒɪt/", pos:"n. / v.", def:"预算 / 编制预算", ex:"We need to plan our monthly budget carefully.", exZh:"我们需要仔细规划每月预算。"},
+  {w:"Lung", ipa:"/lʌŋ/", pos:"n.", def:"肺", ex:"Smoking is bad for your lungs.", exZh:"吸烟对你的肺有害。"},
+  {w:"Rush", ipa:"/rʌʃ/", pos:"v. / n.", def:"冲，急速行动 / 匆忙", ex:"Don't rush; we still have plenty of time.", exZh:"别急，我们还有很多时间。"},
+  {w:"Tale", ipa:"/teɪl/", pos:"n.", def:"故事，传说", ex:"She told us a tale about a brave knight.", exZh:"她给我们讲了一个勇敢骑士的故事。"},
+  {w:"Revise", ipa:"/rɪˈvaɪz/", pos:"v.", def:"修订，修改；复习", ex:"I need to revise my notes before the exam.", exZh:"考试前我需要复习笔记。"},
+  {w:"Highway", ipa:"/ˈhaɪweɪ/", pos:"n.", def:"公路", ex:"The highway was busy during the holiday.", exZh:"假期期间高速公路很繁忙。"},
+  {w:"Rapid", ipa:"/ˈræpɪd/", pos:"adj.", def:"迅速的，快速的", ex:"The city has seen rapid growth in recent years.", exZh:"这座城市近年来发展迅速。"},
+  {w:"Nail", ipa:"/neɪl/", pos:"n. / v.", def:"钉子；指甲 / 钉住", ex:"He hammered the nail into the wall.", exZh:"他把钉子钉进墙里。"},
+  {w:"Pigeon", ipa:"/ˈpɪdʒɪn/", pos:"n.", def:"鸽子", ex:"A pigeon landed on the windowsill.", exZh:"一只鸽子落在窗台上。"},
+  {w:"Palace", ipa:"/ˈpæləs/", pos:"n.", def:"宫殿", ex:"The palace is open to visitors in summer.", exZh:"这座宫殿夏天对游客开放。"},
+  {w:"Tuition", ipa:"/tjuˈɪʃn/", pos:"n.", def:"学费；教学", ex:"Tuition fees have risen in recent years.", exZh:"近年来学费上涨了。"},
+  {w:"Rocket", ipa:"/ˈrɒkɪt/", pos:"n.", def:"火箭", ex:"The rocket lifted off at dawn.", exZh:"火箭在黎明时升空。"},
+  {w:"Bleed", ipa:"/bliːd/", pos:"v.", def:"流血", ex:"His finger began to bleed after the cut.", exZh:"割伤后他的手指开始流血。"},
+  {w:"Flat", ipa:"/flæt/", pos:"adj. / n.", def:"平的，水平的 / 公寓（英）", ex:"They live in a small flat near the station.", exZh:"他们住在车站附近的一套小公寓里。"},
+  {w:"Dentist", ipa:"/ˈdentɪst/", pos:"n.", def:"牙科医生", ex:"I have an appointment with the dentist at three.", exZh:"我三点约了牙医。"},
+  {w:"Core", ipa:"/kɔː/", pos:"n.", def:"核心，果核", ex:"The core of the problem is a lack of trust.", exZh:"问题的核心是缺乏信任。"},
+  {w:"Fuel", ipa:"/ˈfjuːəl/", pos:"n. / v.", def:"燃料 / 加燃料", ex:"The car ran out of fuel on the way.", exZh:"车在路上没油了。"},
+  {w:"Citizen", ipa:"/ˈsɪtɪzn/", pos:"n.", def:"市民，公民", ex:"Every citizen has the right to vote.", exZh:"每个公民都有投票权。"},
+  {w:"Radar", ipa:"/ˈreɪdɑː/", pos:"n.", def:"雷达", ex:"The plane disappeared from the radar.", exZh:"飞机从雷达上消失了。"},
+  {w:"Lend", ipa:"/lend/", pos:"v.", def:"借出", ex:"Could you lend me your dictionary?", exZh:"你能把词典借给我吗？"},
+  {w:"Cable", ipa:"/ˈkeɪbl/", pos:"n.", def:"电缆，缆绳", ex:"The cable connects the computer to the printer.", exZh:"这根电缆把电脑和打印机连接起来。"},
+  {w:"Petrol", ipa:"/ˈpetrəl/", pos:"n.", def:"汽油（英）", ex:"Petrol prices went up again last week.", exZh:"上周汽油价格又上涨了。"},
+  {w:"Gasoline", ipa:"/ˈɡæsəliːn/", pos:"n.", def:"汽油（美）", ex:"Gasoline is cheaper in this area.", exZh:"这个地区的汽油比较便宜。"},
+  {w:"Tablet", ipa:"/ˈtæblət/", pos:"n.", def:"平板电脑；药片", ex:"She takes a tablet for her headache.", exZh:"她吃一片药治头痛。"},
+  {w:"Decade", ipa:"/ˈdekeɪd/", pos:"n.", def:"十年", ex:"The town has changed a lot over the past decade.", exZh:"过去十年这座小镇变化很大。"},
+  {w:"Selfish", ipa:"/ˈselfɪʃ/", pos:"adj.", def:"自私的", ex:"It was selfish of him to keep all the food.", exZh:"他把食物全占了，真自私。"},
+  {w:"Scan", ipa:"/skæn/", pos:"v. / n.", def:"扫描；浏览 / 扫描", ex:"Please scan the code before you enter.", exZh:"进入前请扫描二维码。"},
+  {w:"Tube", ipa:"/tjuːb/", pos:"n.", def:"管，隧道；地铁（英）", ex:"The tube was blocked by a piece of paper.", exZh:"管子被一张纸堵住了。"},
+  {w:"Therefore", ipa:"/ˈðeəfɔː/", pos:"adv.", def:"因此，所以", ex:"He was ill; therefore, he didn't attend the meeting.", exZh:"他病了，因此没参加会议。"},
+  {w:"Unfortunately", ipa:"/ʌnˈfɔːtʃənətli/", pos:"adv.", def:"不幸地，遗憾地", ex:"Unfortunately, the train had already left.", exZh:"不幸的是，火车已经开走了。"},
+  {w:"Slice", ipa:"/slaɪs/", pos:"n. / v.", def:"薄片 / 切片", ex:"She cut the cake into eight slices.", exZh:"她把蛋糕切成八片。"},
+  {w:"Clerk", ipa:"/klɑːk/", pos:"n.", def:"办事员，职员", ex:"The clerk helped me fill in the form.", exZh:"职员帮我填写了表格。"},
+  {w:"Coach", ipa:"/kəʊtʃ/", pos:"n.", def:"教练；长途客车", ex:"The coach encouraged the team before the match.", exZh:"教练在赛前鼓励球队。"},
+  {w:"Shore", ipa:"/ʃɔː/", pos:"n.", def:"岸，滨", ex:"We walked along the shore at sunset.", exZh:"日落时我们沿着海岸散步。"},
+  {w:"Rural", ipa:"/ˈrʊərəl/", pos:"adj.", def:"乡下的，乡村的", ex:"Life in rural areas is quieter than in cities.", exZh:"乡村生活比城市安静。"},
+  {w:"Pilot", ipa:"/ˈpaɪlət/", pos:"n. / v.", def:"飞行员 / 驾驶，试验", ex:"The pilot safely landed the plane.", exZh:"飞行员安全地把飞机降落了。"},
+  {w:"Tape", ipa:"/teɪp/", pos:"n. / v.", def:"带子，磁带 / 录音", ex:"He used tape to fix the broken box.", exZh:"他用胶带把破盒子粘好。"},
+  {w:"Jam", ipa:"/dʒæm/", pos:"n. / v.", def:"果酱 / 塞满，卡住", ex:"The traffic jam made us late for work.", exZh:"交通堵塞让我们上班迟到。"},
+  {w:"Bloom", ipa:"/bluːm/", pos:"v. / n.", def:"开花，繁荣 / 花", ex:"The flowers bloom in early spring.", exZh:"花在早春开放。"},
+  {w:"Trick", ipa:"/trɪk/", pos:"n. / v.", def:"诡计 / 欺骗", ex:"The magician performed a clever trick.", exZh:"魔术师表演了一个巧妙的戏法。"},
+  {w:"Tricky", ipa:"/ˈtrɪki/", pos:"adj.", def:"难以捉摸的，棘手的", ex:"This question is trickier than it looks.", exZh:"这道题比看起来更棘手。"},
+  {w:"In the hope of", ipa:"/ɪn ðə həʊp ɒv/", pos:"phr.", def:"怀着……的希望", ex:"He studied hard in the hope of passing the exam.", exZh:"他努力学习，希望通过考试。"},
+  {w:"Head office", ipa:"/hed ˈɒfɪs/", pos:"phr.", def:"总公司", ex:"The company's head office is in Shanghai.", exZh:"公司总部在上海。"},
+  {w:"Weigh", ipa:"/weɪ/", pos:"v.", def:"称重；重达", ex:"The baby weighs about eight kilograms.", exZh:"这个婴儿重约八公斤。"},
+  {w:"Head for", ipa:"/hed fɔː/", pos:"phr.", def:"前往，出发去", ex:"We headed for the station after breakfast.", exZh:"早饭后我们前往车站。"},
+  {w:"Headache", ipa:"/ˈhedeɪk/", pos:"n.", def:"头疼", ex:"I have a bad headache this morning.", exZh:"今天早上我头痛得厉害。"},
+  {w:"Headline", ipa:"/ˈhedlaɪn/", pos:"n.", def:"头条新闻", ex:"The news made the front-page headline.", exZh:"这条新闻成了头版头条。"},
+  {w:"Headquarters", ipa:"/ˌhedˈkwɔːtəz/", pos:"n.", def:"总部", ex:"The company moved its headquarters to Beijing.", exZh:"公司把总部迁到了北京。"},
+  {w:"Trace", ipa:"/treɪs/", pos:"n. / v.", def:"踪迹 / 追踪", ex:"The police found traces of the missing car.", exZh:"警方找到了失踪汽车的痕迹。"},
+  {w:"Trace back to", ipa:"/treɪs bæk tuː/", pos:"phr.", def:"追溯到", ex:"The custom can be traced back to the Tang Dynasty.", exZh:"这一习俗可以追溯到唐朝。"},
+  {w:"Smooth", ipa:"/smuːð/", pos:"adj.", def:"光滑的；顺利的", ex:"The road ahead is smooth and wide.", exZh:"前面的路平坦宽阔。"},
+  {w:"Or so", ipa:"/ɔː səʊ/", pos:"phr.", def:"大约，左右", ex:"There were twenty people or so at the party.", exZh:"聚会上大约有二十人。"},
+  {w:"And so on/forth", ipa:"/ənd səʊ ɒn/", pos:"phr.", def:"等等", ex:"We bought pens, paper, notebooks and so on.", exZh:"我们买了笔、纸、笔记本等。"},
+  {w:"So far", ipa:"/səʊ fɑː/", pos:"phr.", def:"迄今为止", ex:"So far, everything has gone well.", exZh:"到目前为止，一切顺利。"},
+  {w:"So as to", ipa:"/səʊ æz tuː/", pos:"phr.", def:"为了，以便", ex:"She spoke slowly so as to be understood.", exZh:"她慢慢说，以便别人听懂。"},
+  {w:"Couple", ipa:"/ˈkʌpl/", pos:"n.", def:"两个，几个；夫妇", ex:"A couple of students were late today.", exZh:"今天有几个学生迟到。"},
+  {w:"Oral", ipa:"/ˈɔːrəl/", pos:"adj.", def:"口头的", ex:"The exam includes an oral test.", exZh:"考试包括口语测试。"},
+  {w:"Review", ipa:"/rɪˈvjuː/", pos:"n. / v.", def:"回顾，复习；评论 / 复习", ex:"Let's review the key points before the test.", exZh:"测试前我们复习一下重点。"},
+  {w:"Tone", ipa:"/təʊn/", pos:"n.", def:"语气，音调；风格", ex:"She spoke in a gentle tone.", exZh:"她用温柔的语气说话。"},
+  {w:"The rest", ipa:"/ðə rest/", pos:"phr.", def:"剩余部分，其余部分", ex:"I'll finish the rest of the work tomorrow.", exZh:"剩下的工作我明天完成。"},
+  {w:"Restless", ipa:"/ˈrestləs/", pos:"adj.", def:"得不到休息的，不安宁的", ex:"The children grew restless during the long wait.", exZh:"长时间等待中孩子们变得不安。"},
+  {w:"Tip", ipa:"/tɪp/", pos:"n. / v.", def:"尖端；小费 / 倾斜", ex:"He gave me a useful tip for learning English.", exZh:"他给了我一个学英语的实用建议。"},
+  {w:"Troop", ipa:"/truːp/", pos:"n.", def:"一群；军队，部队", ex:"A troop of soldiers marched past.", exZh:"一队士兵列队走过。"},
+  {w:"Target", ipa:"/ˈtɑːɡɪt/", pos:"n.", def:"靶子，目标", ex:"Our target is to finish the project by Friday.", exZh:"我们的目标是周五前完成项目。"},
+  {w:"Sort out", ipa:"/sɔːt aʊt/", pos:"phr.", def:"整理，分类；解决", ex:"I need to sort out my papers.", exZh:"我需要整理我的文件。"},
+  {w:"Other than", ipa:"/ˈʌðə ðæn/", pos:"phr.", def:"除了", ex:"Other than you, nobody knew the answer.", exZh:"除了你，没人知道答案。"},
+  {w:"The other day", ipa:"/ði ˈʌðə deɪ/", pos:"phr.", def:"不久前的某天", ex:"I met an old friend the other day.", exZh:"前几天我遇到一位老朋友。"},
+  {w:"At times", ipa:"/ət taɪmz/", pos:"phr.", def:"有时", ex:"At times, the work can be very tiring.", exZh:"有时这工作非常累人。"},
+  {w:"For the time being", ipa:"/fɔː ðə taɪm ˈbiːɪŋ/", pos:"phr.", def:"暂时", ex:"For the time being, we'll stay here.", exZh:"暂时我们就待在这里。"},
+  {w:"From time to time", ipa:"/frəm taɪm tuː taɪm/", pos:"phr.", def:"有时，不时", ex:"He visits his parents from time to time.", exZh:"他时不时去看望父母。"},
+  {w:"In no time", ipa:"/ɪn nəʊ taɪm/", pos:"phr.", def:"立即，马上", ex:"The children finished the cake in no time.", exZh:"孩子们很快就把蛋糕吃完了。"},
+  {w:"Once upon a time", ipa:"/wʌns əˈpɒn ə taɪm/", pos:"phr.", def:"从前", ex:"Once upon a time, there lived a king.", exZh:"从前有一位国王。"},
+  {w:"Take one's time", ipa:"/teɪk wʌnz taɪm/", pos:"phr.", def:"从容不迫，慢慢来", ex:"Take your time; there's no hurry.", exZh:"慢慢来，不用急。"},
+  {w:"Iron", ipa:"/ˈaɪən/", pos:"n. / v.", def:"铁；熨斗 / 熨烫", ex:"She ironed her shirt before the interview.", exZh:"面试前她熨了衬衫。"},
+  {w:"Sow", ipa:"/səʊ/", pos:"v.", def:"播种", ex:"Farmers sow seeds in spring.", exZh:"农民在春天播种。"},
+  {w:"By way of", ipa:"/baɪ weɪ ɒv/", pos:"phr.", def:"通过……方法；经由", ex:"He came by way of Hong Kong.", exZh:"他经由香港来。"},
+  {w:"In a way", ipa:"/ɪn ə weɪ/", pos:"phr.", def:"在某种意义上", ex:"In a way, you are right.", exZh:"在某种意义上，你是对的。"},
+  {w:"In the way", ipa:"/ɪn ðə weɪ/", pos:"phr.", def:"挡道", ex:"The box is in the way; please move it.", exZh:"箱子挡道了，请挪一下。"},
+  {w:"Under way", ipa:"/ˈʌndə weɪ/", pos:"phr.", def:"在进行中", ex:"The building work is already under way.", exZh:"建筑工程已经开工。"},
+  {w:"Make way", ipa:"/meɪk weɪ/", pos:"phr.", def:"让路", ex:"Please make way for the ambulance.", exZh:"请给救护车让路。"},
+  {w:"Make one's way", ipa:"/meɪk wʌnz weɪ/", pos:"phr.", def:"行进，前往", ex:"We made our way through the crowd.", exZh:"我们穿过人群前行。"},
+  {w:"Garbage", ipa:"/ˈɡɑːbɪdʒ/", pos:"n.", def:"垃圾", ex:"Please take out the garbage tonight.", exZh:"今晚请把垃圾拿出去。"},
+  {w:"Source", ipa:"/sɔːs/", pos:"n.", def:"来源，源头", ex:"The internet is a useful source of information.", exZh:"互联网是有用的信息来源。"},
+  {w:"Meet", ipa:"/miːt/", pos:"v.", def:"遇见；满足", ex:"We will meet at the library at five.", exZh:"我们五点图书馆见。"},
+  {w:"Hold", ipa:"/həʊld/", pos:"v.", def:"握住；容纳；举行", ex:"She held the baby in her arms.", exZh:"她把婴儿抱在怀里。"},
+  {w:"Bury", ipa:"/ˈberi/", pos:"v.", def:"埋葬；掩埋", ex:"They buried the treasure under the tree.", exZh:"他们把宝藏埋在树下。"},
+  {w:"Dump", ipa:"/dʌmp/", pos:"v. / n.", def:"倾倒 / 垃圾场", ex:"Don't dump waste into the river.", exZh:"不要把垃圾倒进河里。"},
+  {w:"Coal", ipa:"/kəʊl/", pos:"n.", def:"煤", ex:"Coal was once the main source of energy.", exZh:"煤曾是主要能源。"},
+  {w:"Petroleum", ipa:"/pəˈtrəʊliəm/", pos:"n.", def:"石油", ex:"Petroleum is used to make plastics.", exZh:"石油被用来制造塑料。"},
+  {w:"Gas", ipa:"/ɡæs/", pos:"n.", def:"气体；汽油", ex:"The gas stove is easy to use.", exZh:"煤气灶很容易使用。"},
+  {w:"Scarce", ipa:"/skeəs/", pos:"adj.", def:"稀少的，缺乏的", ex:"Clean water is scarce in this region.", exZh:"这个地区清洁水很稀缺。"},
+  {w:"Fossil fuel", ipa:"/ˈfɒsl fjuːəl/", pos:"phr.", def:"化石燃料", ex:"Burning fossil fuels causes pollution.", exZh:"燃烧化石燃料造成污染。"},
+  {w:"Supply", ipa:"/səˈplaɪ/", pos:"n. / v.", def:"供应，供给", ex:"The supply of fresh fruit is limited.", exZh:"新鲜水果的供应有限。"},
+  {w:"Steam", ipa:"/stiːm/", pos:"n.", def:"蒸汽", ex:"Steam rose from the hot soup.", exZh:"热汤冒着蒸汽。"},
+  {w:"Power plant", ipa:"/ˈpaʊə plɑːnt/", pos:"phr.", def:"发电厂", ex:"A new power plant will be built here.", exZh:"这里将建一座新发电厂。"},
+  {w:"Barrel", ipa:"/ˈbærəl/", pos:"n.", def:"桶", ex:"They stored rainwater in a barrel.", exZh:"他们把雨水储存在桶里。"},
+  {w:"Separate", ipa:"/ˈsepəreɪt/", pos:"v. / adj.", def:"分开 / 单独的", ex:"Please separate the paper from the plastic.", exZh:"请把纸和塑料分开。"},
+  {w:"Metal", ipa:"/ˈmetl/", pos:"n.", def:"金属", ex:"The box is made of metal.", exZh:"这个盒子是金属做的。"},
+  {w:"Process", ipa:"/ˈprəʊses/", pos:"n. / v.", def:"过程 / 处理", ex:"Learning a language is a slow process.", exZh:"学语言是个缓慢的过程。"},
+  {w:"Pile up", ipa:"/paɪl ʌp/", pos:"phr.", def:"堆积", ex:"Dirty dishes piled up in the sink.", exZh:"脏盘子在水槽里堆了起来。"},
+  {w:"Pile", ipa:"/paɪl/", pos:"n. / v.", def:"堆 / 堆放", ex:"There is a pile of books on the desk.", exZh:"桌上有一堆书。"},
+  {w:"Take up", ipa:"/teɪk ʌp/", pos:"phr.", def:"占用；开始从事", ex:"This table takes up too much space.", exZh:"这张桌子占太多空间。"},
+  {w:"Account for", ipa:"/əˈkaʊnt fɔː/", pos:"phr.", def:"解释；占（比例）", ex:"Students account for half of the customers.", exZh:"学生占顾客的一半。"},
+  {w:"Get on well with...", ipa:"/ɡet ɒn wel wɪð/", pos:"phr.", def:"与……相处融洽", ex:"She gets on well with her classmates.", exZh:"她和同学相处融洽。"},
+  {w:"Overseas", ipa:"/ˌəʊvəˈsiːz/", pos:"adj. / adv.", def:"海外的 / 在海外", ex:"He studied overseas for two years.", exZh:"他在国外学习了两年。"},
+  {w:"Illegally", ipa:"/ɪˈliːɡəli/", pos:"adv.", def:"非法地", ex:"The trees were cut down illegally.", exZh:"这些树被非法砍伐。"},
+  {w:"Legal", ipa:"/ˈliːɡl/", pos:"adj.", def:"合法的；法律的", ex:"You need legal advice before signing.", exZh:"签字前你需要法律建议。"},
+  {w:"Private", ipa:"/ˈpraɪvət/", pos:"adj.", def:"私人的，私有的", ex:"This is a private conversation.", exZh:"这是私人谈话。"},
+  {w:"Collector", ipa:"/kəˈlektə/", pos:"n.", def:"收藏家；收集者", ex:"He is a collector of old coins.", exZh:"他是旧硬币收藏者。"},
+  {w:"Treasure", ipa:"/ˈtreʒə/", pos:"n. / v.", def:"宝藏 / 珍视", ex:"The museum houses many art treasures.", exZh:"博物馆收藏许多艺术珍品。"},
+  {w:"Own", ipa:"/əʊn/", pos:"adj. / v.", def:"自己的 / 拥有", ex:"She owns a small bookshop.", exZh:"她拥有一家小书店。"},
+  {w:"Major", ipa:"/ˈmeɪdʒə/", pos:"adj. / n.", def:"主要的 / 专业", ex:"The major problem is the cost.", exZh:"主要问题是成本。"},
+  {w:"Recover", ipa:"/rɪˈkʌvə/", pos:"v.", def:"恢复；找回", ex:"He is recovering from a bad cold.", exZh:"他正从重感冒中恢复。"},
+  {w:"In the same case", ipa:"/ɪn ðə seɪm keɪs/", pos:"phr.", def:"在同样的情况下", ex:"In the same case, we should act quickly.", exZh:"在同样情况下，我们应迅速行动。"},
+  {w:"Donate", ipa:"/dəʊˈneɪt/", pos:"v.", def:"捐赠", ex:"Many people donated money to the school.", exZh:"许多人给学校捐款。"},
+  {w:"Turn to", ipa:"/tɜːn tuː/", pos:"phr.", def:"求助于；转向", ex:"You can turn to me for help.", exZh:"你可以向我求助。"},
+  {w:"Channel", ipa:"/ˈtʃænl/", pos:"n.", def:"频道；渠道；海峡", ex:"The program is on Channel Five.", exZh:"这个节目在第五频道。"},
+  {w:"Demand", ipa:"/dɪˈmɑːnd/", pos:"n. / v.", def:"需求 / 要求", ex:"The demand for electric cars is growing.", exZh:"电动汽车的需求在增长。"},
+  {w:"Priceless", ipa:"/ˈpraɪsləs/", pos:"adj.", def:"无价的，极珍贵的", ex:"The painting is priceless.", exZh:"这幅画是无价之宝。"},
+  {w:"Bronze", ipa:"/brɒnz/", pos:"n.", def:"青铜；青铜色", ex:"The statue is made of bronze.", exZh:"这座雕像是青铜做的。"},
+  {w:"Entrepreneur", ipa:"/ˌɒntrəprəˈnɜː/", pos:"n.", def:"企业家", ex:"The young entrepreneur started his own company.", exZh:"这位年轻企业家创办了自己的公司。"},
+  {w:"Precious", ipa:"/ˈpreʃəs/", pos:"adj.", def:"珍贵的", ex:"Time is more precious than money.", exZh:"时间比金钱更珍贵。"},
+  {w:"Recovery", ipa:"/rɪˈkʌvəri/", pos:"n.", def:"恢复；复苏", ex:"The economy is showing signs of recovery.", exZh:"经济正显示出复苏迹象。"},
+  {w:"Set up", ipa:"/set ʌp/", pos:"phr.", def:"建立，设立", ex:"They set up a small company last year.", exZh:"他们去年创办了一家小公司。"},
+  {w:"Database", ipa:"/ˈdeɪtəbeɪs/", pos:"n.", def:"数据库", ex:"The information is stored in a database.", exZh:"信息储存在数据库中。"},
+  {w:"Relevant", ipa:"/ˈreləvənt/", pos:"adj.", def:"相关的", ex:"Please provide all relevant documents.", exZh:"请提供所有相关文件。"},
+  {w:"Sign", ipa:"/saɪn/", pos:"n. / v.", def:"标志 / 签名", ex:"There is a sign at the entrance.", exZh:"入口处有个标志。"},
+  {w:"Infer", ipa:"/ɪnˈfɜː/", pos:"v.", def:"推断", ex:"We can infer his mood from his face.", exZh:"我们可以从他的表情推断他的情绪。"},
+  {w:"Vary", ipa:"/ˈveəri/", pos:"v.", def:"变化，不同", ex:"Prices vary from season to season.", exZh:"价格随季节变化。"},
+  {w:"Court", ipa:"/kɔːt/", pos:"n.", def:"法院；球场；宫廷", ex:"The case will be heard in court next week.", exZh:"案件下周将在法庭审理。"},
+  {w:"Get rid of", ipa:"/ɡet rɪd ɒv/", pos:"phr.", def:"摆脱，除去", ex:"You should get rid of that old chair.", exZh:"你应该扔掉那把旧椅子。"},
+  {w:"Standard", ipa:"/ˈstændəd/", pos:"n. / adj.", def:"标准 / 标准的", ex:"The hotel offers a high standard of service.", exZh:"这家酒店提供高标准服务。"},
+  {w:"In addition", ipa:"/ɪn əˈdɪʃn/", pos:"phr.", def:"另外，此外", ex:"In addition, we need more time.", exZh:"此外，我们需要更多时间。"},
+  {w:"A set of", ipa:"/ə set ɒv/", pos:"phr.", def:"一套，一组", ex:"She bought a set of kitchen knives.", exZh:"她买了一套厨房刀具。"},
+  {w:"Movable", ipa:"/ˈmuːvəbl/", pos:"adj.", def:"可移动的", ex:"The chairs are light and movable.", exZh:"这些椅子轻便可移动。"},
+  {w:"Post", ipa:"/pəʊst/", pos:"n. / v.", def:"邮政；职位 / 邮寄", ex:"I will post the letter this afternoon.", exZh:"我今天下午寄信。"},
+  {w:"Concentration", ipa:"/ˌkɒnsnˈtreɪʃn/", pos:"n.", def:"专注；浓度", ex:"Reading requires great concentration.", exZh:"阅读需要高度专注。"},
+  {w:"Concentrate on", ipa:"/ˈkɒnsntreɪt ɒn/", pos:"phr.", def:"专注于", ex:"It's hard to concentrate on work with noise.", exZh:"有噪音很难专心工作。"},
+  {w:"Injure", ipa:"/ˈɪndʒə/", pos:"v.", def:"伤害", ex:"Two workers were injured in the accident.", exZh:"两名工人在事故中受伤。"},
+  {w:"Urge", ipa:"/ɜːdʒ/", pos:"v. / n.", def:"敦促 / 冲动", ex:"The doctor urged him to stop smoking.", exZh:"医生敦促他戒烟。"},
+  {w:"Involve", ipa:"/ɪnˈvɒlv/", pos:"v.", def:"涉及；使参与", ex:"The job involves a lot of travel.", exZh:"这份工作涉及大量出差。"},
+  {w:"Attend", ipa:"/əˈtend/", pos:"v.", def:"出席；照料", ex:"She attends evening classes twice a week.", exZh:"她每周上两次晚课。"},
+  {w:"Financial", ipa:"/faɪˈnænʃl/", pos:"adj.", def:"财务的，金融的", ex:"The company is in financial trouble.", exZh:"公司陷入财务困境。"},
+  {w:"Undergraduate", ipa:"/ˌʌndəˈɡrædʒuət/", pos:"n.", def:"本科生", ex:"He is an undergraduate at Peking University.", exZh:"他是北京大学本科生。"},
+  {w:"Application", ipa:"/ˌæplɪˈkeɪʃn/", pos:"n.", def:"申请；应用", ex:"I sent my application last week.", exZh:"我上周寄出了申请。"},
+  {w:"Proof", ipa:"/pruːf/", pos:"n.", def:"证据，证明", ex:"This letter is proof of his address.", exZh:"这封信是他住址的证明。"},
+  {w:"Ensure", ipa:"/ɪnˈʃʊə/", pos:"v.", def:"确保", ex:"Please ensure that the door is locked.", exZh:"请确保门锁好了。"},
+  {w:"Procedure", ipa:"/prəˈsiːdʒə/", pos:"n.", def:"程序，步骤", ex:"Follow the correct procedure for safety.", exZh:"为了安全请遵循正确程序。"},
+  {w:"Statement", ipa:"/ˈsteɪtmənt/", pos:"n.", def:"陈述；报表", ex:"The police took a statement from him.", exZh:"警方从他那里取了陈述。"},
+  {w:"Issue", ipa:"/ˈɪʃuː/", pos:"n. / v.", def:"问题；期号 / 发布", ex:"The magazine comes out every month.", exZh:"这本杂志每月出版一期。"},
+  {w:"Occasionally", ipa:"/əˈkeɪʒnəli/", pos:"adv.", def:"偶尔", ex:"We occasionally eat out on weekends.", exZh:"我们周末偶尔出去吃饭。"},
+  {w:"Generally", ipa:"/ˈdʒenrəli/", pos:"adv.", def:"通常，一般地", ex:"Generally, the weather here is mild.", exZh:"一般来说，这里天气温和。"},
+  {w:"Variety", ipa:"/vəˈraɪəti/", pos:"n.", def:"多样性；种类", ex:"The shop sells a variety of fruits.", exZh:"这家店卖各种水果。"},
+  {w:"Sort", ipa:"/sɔːt/", pos:"n. / v.", def:"种类 / 分类", ex:"What sort of music do you like?", exZh:"你喜欢哪种音乐？"},
+  {w:"A variety of", ipa:"/ə vəˈraɪəti ɒv/", pos:"phr.", def:"各种各样的", ex:"The library offers a variety of books.", exZh:"图书馆提供各种书籍。"},
+  {w:"Financial assistance", ipa:"/faɪˈnænʃl əˈsɪstəns/", pos:"phr.", def:"经济援助", ex:"Students can apply for financial assistance.", exZh:"学生可以申请经济援助。"},
+  {w:"Various", ipa:"/ˈveəriəs/", pos:"adj.", def:"各种各样的", ex:"The festival attracts various visitors.", exZh:"这个节日吸引各种游客。"},
+  {w:"Accommodation", ipa:"/əˌkɒməˈdeɪʃn/", pos:"n.", def:"住宿，膳宿", ex:"The price includes accommodation and meals.", exZh:"价格包括住宿和餐饮。"},
   {w:"Cheque", ipa:"/tʃek/", pos:"n.", def:"支票（英式拼写）", ex:"He paid the bill by cheque.", exZh:"他用支票付了账。"},
   {w:"Stain", ipa:"/steɪn/", pos:"n. / v.", def:"污点，污渍 / 染污；染色", ex:"Coffee left a stain on the carpet.", exZh:"咖啡在地毯上留下了一块污渍。"},
   {w:"Swallow", ipa:"/ˈswɒləʊ/", pos:"v. / n.", def:"吞咽；吞没 / 燕子", ex:"She swallowed the pill with a glass of water.", exZh:"她用水吞下了药片。"},
@@ -1061,7 +1092,7 @@ const GRAMMAR = [
   {id:"g40", cat:"非谓语", q:"Remember ___ the door when you leave.", opts:["locking", "to lock", "lock", "locked"], ans:1, exp:"remember to do 表示“记得去做某事”。"},
   {id:"g41", cat:"非谓语", q:"The boss made him ___ overtime.", opts:["work", "working", "to work", "worked"], ans:0, exp:"make sb. do sth.，使役动词后接不带 to 的不定式。"},
   {id:"g42", cat:"非谓语", q:"He was made ___ overtime.", opts:["work", "working", "to work", "worked"], ans:2, exp:"使役动词变被动后，要还原不定式符号 to。"},
-  {id:"g43", cat:"非谓语", q:"I saw him ___ the room just now.", opts:["enter", "entering", "to enter", "entered"], ans:0, exp:"see sb. do sth. 表示看到动作的全过程；just now 提示动作已完成。"},
+  {id:"g43", cat:"非谓语", q:"I saw him ___ the room, lock the door and leave.", opts:["enter", "entering", "to enter", "entered"], ans:0, exp:"see sb. do sth. 表示看到动作的全过程；与 lock、leave 并列，用动词原形。"},
   {id:"g44", cat:"非谓语", q:"___ along the street, I met an old friend.", opts:["Walk", "Walked", "Walking", "To walk"], ans:2, exp:"现在分词作时间状语，逻辑主语 I 与 walk 是主动关系。"},
   {id:"g45", cat:"非谓语", q:"___ more time, we could have done it better.", opts:["Give", "Giving", "Given", "To give"], ans:2, exp:"过去分词作条件状语，we 与 give 是被动关系。"},
   {id:"g46", cat:"非谓语", q:"___ his homework, he went out to play.", opts:["Finish", "Finished", "Having finished", "To finish"], ans:2, exp:"完成式 having done 表示动作发生在谓语之前。"},
@@ -1069,7 +1100,7 @@ const GRAMMAR = [
   {id:"g48", cat:"非谓语", q:"With the work ___, he went home.", opts:["finish", "finishing", "finished", "to finish"], ans:2, exp:"with 复合结构，work 与 finish 是被动关系，用过去分词。"},
   {id:"g49", cat:"句法", q:"___ he said surprised us all.", opts:["That", "What", "Which", "Whether"], ans:1, exp:"主语从句中 said 缺宾语，用 what 充当宾语并引导从句。"},
   {id:"g50", cat:"句法", q:"I don't know ___ he will come or not.", opts:["if", "whether", "that", "what"], ans:1, exp:"与 or not 直接连用时只能用 whether。"},
-  {id:"g51", cat:"句法", q:"The news ___ he told me is true.", opts:["that", "what", "which", "who"], ans:0, exp:"定语从句中 told 缺宾语，先行词 news 指物，用 that/which；此处 that 最合适。"},
+  {id:"g51", cat:"句法", q:"All ___ he told me is true.", opts:["that", "what", "which", "who"], ans:0, exp:"先行词为 all 时，定语从句只能用 that。"},
   {id:"g52", cat:"句法", q:"He asked me ___.", opts:["where did I live", "where I lived", "where I live", "where do I live"], ans:1, exp:"宾语从句用陈述语序，且主句为过去时，从句用过去时。"},
   {id:"g53", cat:"句法", q:"This is the best film ___ I have ever seen.", opts:["which", "that", "who", "what"], ans:1, exp:"先行词被最高级修饰时，定语从句只能用 that。"},
   {id:"g54", cat:"句法", q:"He failed the exam, ___ made his parents angry.", opts:["that", "which", "what", "who"], ans:1, exp:"非限制性定语从句指代整个主句，只能用 which。"},
@@ -1080,13 +1111,29 @@ const GRAMMAR = [
   {id:"g59", cat:"句法", q:"___ it was raining, they went on working.", opts:["Although", "But", "However", "Because"], ans:0, exp:"although 引导让步状语从句，不能与 but 连用。"},
   {id:"g60", cat:"句法", q:"He ran ___ fast that nobody could catch him.", opts:["so", "such", "very", "too"], ans:0, exp:"so + 形容词/副词 + that 引导结果状语从句。"},
   {id:"g61", cat:"句法", q:"Not until he came ___ the truth.", opts:["I knew", "did I know", "I know", "do I know"], ans:1, exp:"not until 置于句首时，主句部分倒装，从句不倒装。"},
-  {id:"g62", cat:"句法", q:"Only in this way ___ succeed.", opts:["we can", "can we", "we could", "could we"], ans:1, exp:"only + 状语置于句首，主句部分倒装。"},
+  {id:"g62", cat:"句法", q:"Only in this way ___ succeed.", opts:["we can", "can we", "we are", "are we"], ans:1, exp:"only + 状语置于句首，主句部分倒装：can we succeed。"},
   {id:"g63", cat:"句法", q:"He likes English, and ___.", opts:["so I do", "so do I", "so am I", "neither do I"], ans:1, exp:"so + 助动词 + 主语，表示“某人也一样”。"},
   {id:"g64", cat:"句法", q:"It was in the park ___ I met him.", opts:["which", "that", "where", "when"], ans:1, exp:"强调句型 It was + 被强调部分 + that + 其余部分，强调地点状语用 that。"},
   {id:"g65", cat:"句法", q:"He hardly knows me, ___?", opts:["does he", "doesn't he", "is he", "isn't he"], ans:0, exp:"hardly 表示否定，反义疑问句用肯定形式。"},
   {id:"g66", cat:"句法", q:"Let's go, ___?", opts:["shall we", "will you", "do we", "don't we"], ans:0, exp:"Let's 开头的祈使句，反义疑问句用 shall we。"},
   {id:"g67", cat:"句法", q:"It is the first time that I ___ here.", opts:["come", "came", "have come", "had come"], ans:2, exp:"It is the first time that + 现在完成时。"},
-  {id:"g68", cat:"句法", q:"It took me two hours ___ the work.", opts:["finish", "finishing", "to finish", "finished"], ans:2, exp:"It takes sb. some time to do sth.，用不定式作真正主语。"}
+  {id:"g68", cat:"句法", q:"It took me two hours ___ the work.", opts:["finish", "finishing", "to finish", "finished"], ans:2, exp:"It takes sb. some time to do sth.，用不定式作真正主语。"},
+  {id:"f1", cat:"动词", type:"fill", q:"He ___ (study) English every day.", ans:"studies", exp:"一般现在时，主语为第三人称单数，动词加 -s。"},
+  {id:"f2", cat:"动词", type:"fill", q:"By the time we arrived, the film ___ (begin).", ans:"had begun", exp:"电影开始发生在“到达”之前，即过去的过去，用过去完成时。"},
+  {id:"f3", cat:"非谓语", type:"fill", q:"She enjoys ___ (read) novels.", ans:"reading", exp:"enjoy 后接动名词作宾语。"},
+  {id:"f4", cat:"非谓语", type:"fill", q:"___ (give) more time, we could do it better.", ans:"given", exp:"过去分词作条件状语，we 与 give 是被动关系。"},
+  {id:"f5", cat:"句法", type:"fill", q:"This is the best film ___ I have ever seen.", ans:"that", exp:"先行词被最高级修饰，定语从句只能用 that。"},
+  {id:"f6", cat:"句法", type:"fill", q:"___ he said surprised us all.", ans:"what", exp:"主语从句中 said 缺宾语，用 what 引导并充当宾语。"},
+  {id:"f7", cat:"词法", type:"fill", q:"There are two ___ (child) in the room.", ans:"children", exp:"child 的复数是不规则形式 children。"},
+  {id:"f8", cat:"词法", type:"fill", q:"It took me an hour ___ (finish) the work.", ans:"to finish", exp:"It takes sb. some time to do sth.，用不定式作真正主语。"},
+  {id:"f9", cat:"动词", type:"fill", q:"If I ___ (be) you, I would accept it.", ans:"were", exp:"与现在事实相反的虚拟条件句，be 动词用 were。"},
+  {id:"f10", cat:"句法", type:"fill", q:"Not until he came ___ I know the truth.", ans:"did", exp:"not until 置于句首，主句部分倒装，用助动词 did。"},
+  {id:"c1", cat:"句法", type:"correct", q:"下列句子没有语法错误的是：", opts:["Although it was raining, but we went out.", "Although it was raining, we went out.", "Though it was raining, but we went out.", "It was raining, although we went out."], ans:1, exp:"although / though 不能与 but 连用，只能保留一个。"},
+  {id:"c2", cat:"句法", type:"correct", q:"下列句子没有语法错误的是：", opts:["Because he was ill, so he didn't come.", "He was ill, because he didn't come.", "Because he was ill, he didn't come.", "He was ill, so because he didn't come."], ans:2, exp:"because 不能与 so 连用。"},
+  {id:"c3", cat:"动词", type:"correct", q:"下列句子没有语法错误的是：", opts:["I have bought this book for three years.", "I have had this book for three years.", "I bought this book for three years.", "I have buy this book for three years."], ans:1, exp:"buy 是非延续性动词，与 for 连用应改用 have。"},
+  {id:"c4", cat:"动词", type:"correct", q:"下列句子没有语法错误的是：", opts:["He was seen enter the room.", "He was seen to enter the room.", "He was seen entered the room.", "He saw to enter the room."], ans:1, exp:"感官动词变被动后要还原不定式符号 to。"},
+  {id:"c5", cat:"动词", type:"correct", q:"下列句子没有语法错误的是：", opts:["The number of students are increasing.", "A number of students is late.", "The number of students is increasing.", "A number of student are late."], ans:2, exp:"the number of 作主语谓语用单数；a number of 用复数。"},
+  {id:"c6", cat:"句法", type:"correct", q:"下列句子没有语法错误的是：", opts:["Only in this way we can succeed.", "Only in this way can we succeed.", "Only in this way we could succeed.", "In this way only can we succeed."], ans:1, exp:"only + 状语置于句首，主句部分倒装。"}
 ];
 
 /* =========================================================
@@ -1272,6 +1319,10 @@ function renderHome() {
   $("taskStarTxt").textContent = starUnmastered + " 个";
   $("taskStarBar").style.width = (s.star ? Math.round((s.star - starUnmastered) / s.star * 100) : 0) + "%";
 
+  const gday = day.g || 0;
+  $("taskGramTxt").textContent = Math.min(gday, 5) + " / 5";
+  $("taskGramBar").style.width = Math.min(100, gday / 5 * 100) + "%";
+
   const tm = new Date(); tm.setDate(tm.getDate() + 1);
   const tmStart = new Date(tm.getFullYear(), tm.getMonth(), tm.getDate()).getTime();
   const tmEnd = tmStart + 86400000;
@@ -1280,7 +1331,7 @@ function renderHome() {
     const st = wstate(i);
     if (st.seen > 0 && st.due >= tmStart && st.due < tmEnd) tomorrowDue++;
   });
-  $("planHint").textContent = "今天待复习 " + s.due + " 个 · 明天预计 " + tomorrowDue + " 个";
+  $("planHint").textContent = "今天待复习 " + s.due + " 个 · 明天预计 " + tomorrowDue + " 个 · 语法待复习 " + grammarStats().due + " 个";
   $("btnPlan").disabled = (s.newLeft + s.due) === 0;
 
   const rec = $("recent");
@@ -1577,6 +1628,20 @@ function renderQuizSetup() {
   $("quizRun").classList.add("hidden");
   $("quizResult").classList.add("hidden");
 }
+function spellableWord(w) {
+  return /^[A-Za-z][A-Za-z' -]*$/.test(w);
+}
+function pickOthers(i, all, n) {
+  const used = new Set([WORDS[i].def]);
+  const out = [];
+  for (const j of shuffled(all)) {
+    if (j === i || used.has(WORDS[j].def)) continue;
+    used.add(WORDS[j].def);
+    out.push(j);
+    if (out.length === n) break;
+  }
+  return out;
+}
 function startQuiz(kind) {
   const learned = WORDS.map((_, i) => i).filter(i => wstate(i).seen > 0);
   const all = WORDS.map((_, i) => i);
@@ -1594,13 +1659,18 @@ function startQuiz(kind) {
   } else {
     pool = need.length >= 4 ? need : (learned.length >= 4 ? learned : all);
   }
+  if (kind === "spell") {
+    const spellable = pool.filter(i => spellableWord(WORDS[i].w));
+    if (spellable.length) pool = spellable;
+  }
   const picked = shuffled(pool).slice(0, Math.min(10, pool.length));
   const qs = picked.map(i => {
     let mode = kind;
     if (kind === "starred") mode = ["spell", "en2cn", "cn2en", "choice"][Math.floor(Math.random() * 4)];
+    if (mode === "spell" && !spellableWord(WORDS[i].w)) mode = "en2cn";
     if (mode === "spell") return { type: "spell", i };
     const askWord = mode === "en2cn" ? true : mode === "cn2en" ? false : Math.random() < 0.6;
-    const others = shuffled(all.filter(j => j !== i)).slice(0, 3);
+    const others = pickOthers(i, all, 3);
     return { type: "choice", i, askWord, options: shuffled([i, ...others]) };
   });
   quiz = { kind, qs, i: 0, score: 0, answered: false, wrong: [] };
@@ -1842,6 +1912,24 @@ function renderForecast() {
    ========================================================= */
 const GKEY = "shici.grammar.v1";
 const LETTERS = ["A", "B", "C", "D"];
+const GRAMMAR_RULES = [
+  { t: "主将从现", m: "时间 / 条件状语从句用一般现在时表将来。", e: "If it rains tomorrow, we will stay at home." },
+  { t: "虽然但是不共存", m: "although 与 but、because 与 so 不能同时出现。", e: "Although it rained, we went out." },
+  { t: "介词后加 doing", m: "look forward to / be used to / devote to 的 to 是介词。", e: "I look forward to hearing from you." },
+  { t: "感官使役省 to", m: "make / let / have / see / hear + sb. + do；变被动要还原 to。", e: "He was made to work overtime." },
+  { t: "比较级修饰", m: "much / far / even / still / a lot 修饰比较级，very 不行。", e: "This book is much more interesting." },
+  { t: "比较对象一致", m: "用 that / those 替代前面同类的名词。", e: "The population of China is larger than that of Japan." },
+  { t: "that 必用", m: "先行词为 all / everything / 最高级 / 序数词 / the only 时只用 that。", e: "This is the best film that I have seen." },
+  { t: "逗号后只用 which", m: "非限制性定语从句指物用 which，不用 that。", e: "He failed, which made his parents angry." },
+  { t: "虚拟语气", m: "现在：were + would do；过去：had done + would have done。", e: "If I were you, I would accept it." },
+  { t: "倒装", m: "only + 状语、not until 置句首，主句部分倒装。", e: "Only in this way can we succeed." },
+  { t: "强调句", m: "It is / was ... that ...；去掉后句子仍完整。", e: "It was in the park that I met him." },
+  { t: "名词性从句", m: "that 不作成分，what 作成分；从句用陈述语序。", e: "What he said surprised us all." },
+  { t: "主谓一致", m: "the number of 用单数；a number of 用复数。", e: "The number of students is 500." },
+  { t: "非谓语", m: "主动 doing，被动 done，目的 to do。", e: "Given more time, we could do better." },
+  { t: "时态标志", m: "since / for 用现在完成；by the time 用过去 / 将来完成。", e: "I have lived here since 2020." },
+  { t: "冠词", m: "乐器加 the，球类不加，go to school 零冠词。", e: "She plays the violin every day." }
+];
 let G = { rec: {}, wrong: {} };
 let gquiz = null;
 
@@ -1858,36 +1946,54 @@ function saveGrammar() {
   try { localStorage.setItem(GKEY, JSON.stringify(G)); } catch (e) { /* ignore */ }
 }
 function grammarStats() {
-  let done = 0, right = 0, total = 0;
+  let done = 0, right = 0, total = 0, due = 0;
+  const now = Date.now();
   GRAMMAR.forEach(g => {
     const r = G.rec[g.id];
     if (r) {
       done++;
       right += r.r || 0;
       total += (r.r || 0) + (r.w || 0);
+      if (r.due && r.due <= now) due++;
     }
   });
-  return { done, right, total, wrong: Object.keys(G.wrong).length, rate: total ? Math.round(right / total * 100) : null };
+  return { done, right, total, due, wrong: Object.keys(G.wrong).length, rate: total ? Math.round(right / total * 100) : null };
 }
 function renderGrammar() {
   const s = grammarStats();
   $("gDoneNum").textContent = s.done;
   $("gTotalNum").textContent = "/ " + GRAMMAR.length + " 题";
   $("gRate").textContent = s.rate === null ? "—" : s.rate + "%";
+  $("gDueNum").textContent = s.due;
+  $("gDueBadge").textContent = s.due;
   $("gWrongNum").textContent = s.wrong;
   $("gWrongBadge").textContent = s.wrong;
+  $("gReview").disabled = s.due === 0;
   $("gWrongBtn").disabled = s.wrong === 0;
+  const grid = $("ruleGrid");
+  if (grid && !grid.dataset.done) {
+    grid.innerHTML = GRAMMAR_RULES.map(r =>
+      '<div class="rule-card"><b>' + esc(r.t) + '</b><p>' + esc(r.m) + '</p><em>' + esc(r.e) + '</em></div>'
+    ).join("");
+    grid.dataset.done = "1";
+  }
 }
-function startGrammar(cat, ids) {
+function startGrammar(cat, ids, limit) {
+  const now = Date.now();
   let pool;
   if (ids) {
     pool = ids.map(id => GRAMMAR.find(g => g.id === id)).filter(Boolean);
+  } else if (cat === "due") {
+    pool = GRAMMAR.filter(g => G.rec[g.id] && G.rec[g.id].due && G.rec[g.id].due <= now);
   } else {
     pool = GRAMMAR.filter(g => cat === "all" || g.cat === cat);
   }
-  if (!pool.length) { toast(ids ? "语法错题本是空的" : "这个分类还没有题目"); return; }
-  pool = shuffled(pool).slice(0, Math.min(10, pool.length));
-  gquiz = { queue: pool, idx: 0, score: 0, answered: false, cat: ids ? "错题" : cat, wrongIds: [] };
+  if (!pool.length) {
+    toast(cat === "due" ? "今天没有到期的语法复习" : "这个分类还没有题目");
+    return;
+  }
+  pool = shuffled(pool).slice(0, Math.min(limit || 10, pool.length));
+  gquiz = { queue: pool, idx: 0, score: 0, answered: false, mode: cat === "due" ? "due" : (ids ? "wrong" : cat), cat: cat === "due" ? "今日复习" : (ids ? "错题" : cat), wrongIds: [] };
   $("gHome").classList.add("hidden");
   $("gDone").classList.add("hidden");
   $("gRun").classList.remove("hidden");
@@ -1897,7 +2003,7 @@ function startGrammar(cat, ids) {
 function showG() {
   const g = gquiz.queue[gquiz.idx];
   gquiz.answered = false;
-  $("gCat").textContent = g.cat;
+  $("gCat").textContent = g.type === "fill" ? g.cat + " · 语法填空" : g.type === "correct" ? g.cat + " · 改错辨析" : g.cat;
   $("gStem").textContent = g.q;
   $("gCounter").textContent = (gquiz.idx + 1) + " / " + gquiz.queue.length;
   $("gBar").style.width = (gquiz.idx / gquiz.queue.length * 100) + "%";
@@ -1905,6 +2011,14 @@ function showG() {
   $("gNext").classList.add("hidden");
   const box = $("gOpts");
   box.innerHTML = "";
+  if (g.type === "fill") {
+    box.innerHTML = '<div class="fill-row"><input class="spell-input" id="gFill" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="输入答案…"><button class="btn primary" id="gFillSubmit">提交</button></div>';
+    const inp = $("gFill");
+    inp.focus();
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); submitFill(); } });
+    $("gFillSubmit").onclick = submitFill;
+    return;
+  }
   g.opts.forEach((text, i) => {
     const b = document.createElement("button");
     b.className = "option";
@@ -1913,21 +2027,21 @@ function showG() {
     box.appendChild(b);
   });
 }
-function answerG(i) {
-  if (!gquiz || gquiz.answered) return;
-  const g = gquiz.queue[gquiz.idx];
-  const correct = i === g.ans;
-  gquiz.answered = true;
-  const opts = $$("#gOpts .option");
-  opts.forEach((el, k) => {
-    el.disabled = true;
-    if (k === g.ans) el.classList.add("correct");
-    else if (k === i) el.classList.add("wrong");
-  });
+function recordG(g, correct) {
   if (correct) gquiz.score++;
-  const r = G.rec[g.id] || { r: 0, w: 0 };
-  if (correct) r.r++; else r.w++;
+  const r = G.rec[g.id] || { r: 0, w: 0, b: 0, due: 0 };
+  if (correct) {
+    r.r++;
+    r.b = Math.min(9, (r.b || 0) + 1);
+    r.due = Date.now() + IV[r.b] * DAY;
+  } else {
+    r.w++;
+    r.b = 1;
+    r.due = Date.now() + IV[1] * DAY;
+  }
   G.rec[g.id] = r;
+  const day = ensureDay();
+  day.g = (day.g || 0) + 1;
   if (correct) {
     if (G.wrong[g.id]) {
       G.wrong[g.id].streak = (G.wrong[g.id].streak || 0) + 1;
@@ -1941,14 +2055,44 @@ function answerG(i) {
     if (!gquiz.wrongIds.includes(g.id)) gquiz.wrongIds.push(g.id);
   }
   saveGrammar();
+}
+function feedbackG(g, correct, answerText) {
   const fb = $("gFeedback");
   fb.className = "feedback " + (correct ? "ok" : "no");
   fb.innerHTML = '<div class="fb-title">' + (correct ? "回答正确 ✓" : "回答错误 ✗") + '</div>' +
-    (correct ? "" : '<div class="fb-ans">正确答案：' + LETTERS[g.ans] + '．' + esc(g.opts[g.ans]) + '</div>') +
+    (correct ? "" : '<div class="fb-ans">正确答案：' + esc(answerText) + '</div>') +
     '<div class="fb-exp">解析：' + esc(g.exp) + '</div>';
   fb.classList.remove("hidden");
   $("gNext").classList.remove("hidden");
   $("gNext").focus();
+}
+function answerG(i) {
+  if (!gquiz || gquiz.answered) return;
+  const g = gquiz.queue[gquiz.idx];
+  const correct = i === g.ans;
+  gquiz.answered = true;
+  $$("#gOpts .option").forEach((el, k) => {
+    el.disabled = true;
+    if (k === g.ans) el.classList.add("correct");
+    else if (k === i) el.classList.add("wrong");
+  });
+  recordG(g, correct);
+  feedbackG(g, correct, LETTERS[g.ans] + "．" + g.opts[g.ans]);
+}
+function submitFill() {
+  if (!gquiz || gquiz.answered) return;
+  const g = gquiz.queue[gquiz.idx];
+  const input = $("gFill");
+  if (!input) return;
+  const norm = s => String(s).toLowerCase().trim().replace(/[.,!?;:]+$/g, "").replace(/\s+/g, " ");
+  const answers = Array.isArray(g.ans) ? g.ans : [g.ans];
+  const correct = answers.some(a => norm(a) === norm(input.value));
+  gquiz.answered = true;
+  input.disabled = true;
+  input.classList.add(correct ? "good" : "bad");
+  if ($("gFillSubmit")) $("gFillSubmit").disabled = true;
+  recordG(g, correct);
+  feedbackG(g, correct, answers[0]);
 }
 function nextG() {
   gquiz.idx++;
@@ -2104,6 +2248,11 @@ function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.datase
     if (!ids.length) { toast("语法错题本是空的"); return; }
     startGrammar("错题", ids);
   };
+  $("gReview").onclick = () => startGrammar("due");
+  $("btnGram").onclick = () => {
+    const due = grammarStats().due;
+    startGrammar(due ? "due" : "all", null, 5);
+  };
   $("gExit").onclick = () => {
     gquiz = null;
     $("gRun").classList.add("hidden");
@@ -2112,7 +2261,11 @@ function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.datase
     renderGrammar();
   };
   $("gNext").onclick = nextG;
-  $("gAgain").onclick = () => startGrammar(gquiz.cat, gquiz.cat === "错题" ? Object.keys(G.wrong) : null);
+  $("gAgain").onclick = () => {
+    if (gquiz.mode === "wrong") startGrammar("错题", Object.keys(G.wrong));
+    else if (gquiz.mode === "due") startGrammar("due");
+    else startGrammar(gquiz.mode);
+  };
   $("gBack").onclick = () => {
     gquiz = null;
     $("gRun").classList.add("hidden");
@@ -2158,13 +2311,45 @@ function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.datase
     $("autoSpeak").classList.toggle("on", S.settings.autoSpeak);
     save();
   };
+  $("exportBtn").onclick = () => {
+    const data = { app: "shici", version: 1, exportedAt: new Date().toISOString(), vocab: S, grammar: G };
+    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "拾词备份-" + todayKey(new Date()) + ".json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("已导出备份文件");
+  };
+  $("importBtn").onclick = () => $("importFile").click();
+  $("importFile").onchange = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const d = JSON.parse(rd.result);
+        if (!d.vocab && !d.grammar) throw new Error("bad");
+        if (!confirm("导入会覆盖当前学习记录，确定继续吗？")) { e.target.value = ""; return; }
+        if (d.vocab) localStorage.setItem(KEY, JSON.stringify(d.vocab));
+        if (d.grammar) localStorage.setItem(GKEY, JSON.stringify(d.grammar));
+        toast("导入成功，正在刷新…");
+        setTimeout(() => location.reload(), 700);
+      } catch (err) { toast("文件格式不正确"); }
+      e.target.value = "";
+    };
+    rd.readAsText(f);
+  };
+
   $("resetBtn").onclick = () => {
     if (!confirm("确定清空全部学习记录吗？此操作不可恢复。")) return;
-    try { localStorage.removeItem(KEY); } catch (e) { }
+    try { localStorage.removeItem(KEY); localStorage.removeItem(GKEY); } catch (e) { }
     S = defaultState();
+    G = { rec: {}, wrong: {} };
     ensureDay();
     applyTheme("light");
     renderHome();
+    renderGrammar();
     go("home");
     toast("学习记录已清空");
   };
@@ -2186,6 +2371,8 @@ function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.datase
       if (e.key === "Enter") { e.preventDefault(); nextG(); }
       return;
     }
+    const cur = gquiz && gquiz.queue[gquiz.idx];
+    if (cur && cur.type === "fill") return;
     if (/^[1-4]$/.test(e.key)) {
       e.preventDefault();
       const opts = $$("#gOpts .option");
@@ -2207,6 +2394,9 @@ $("statTotal").textContent = WORDS.length;
 bind();
 renderHome();
 if (!storageOK) toast("浏览器限制本地存储，本次学习记录可能无法保存");
+if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 </script>
 </body>
 </html>
