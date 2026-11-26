@@ -390,7 +390,7 @@
 
     <div class="home-cols">
       <div class="card pad">
-        <div class="task-head"><h3>今日任务</h3><button class="link" id="goLibrary">查看词库 →</button></div>
+        <div class="task-head"><h3>今日计划</h3><button class="link" id="goLibrary">查看词库 →</button></div>
         <div class="task">
           <div class="task-row"><span>新词学习</span><b id="taskNewTxt">0 / 10</b></div>
           <div class="bar"><i id="taskNewBar"></i></div>
@@ -398,6 +398,14 @@
         <div class="task">
           <div class="task-row"><span>复习巩固</span><b id="taskRevTxt">0 个待复习</b></div>
           <div class="bar"><i id="taskRevBar"></i></div>
+        </div>
+        <div class="task">
+          <div class="task-row"><span>生词本待巩固</span><b id="taskStarTxt">0 个</b></div>
+          <div class="bar"><i id="taskStarBar"></i></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn primary" id="btnPlan">开始今日计划</button>
+          <span class="muted small" id="planHint"></span>
         </div>
       </div>
       <div class="card pad">
@@ -489,6 +497,13 @@
           <div class="chips" id="ipaChips">
             <button class="chip active" data-ipa="on">显示音标</button>
             <button class="chip" data-ipa="off">隐藏音标</button>
+          </div>
+        </div>
+        <div class="field" style="margin:6px 0 4px">
+          <label>生词本专项范围</label>
+          <div class="chips" id="starFilterChips">
+            <button class="chip active" data-star="unmastered">只练未掌握</button>
+            <button class="chip" data-star="all">全部生词</button>
           </div>
         </div>
         <div class="mode-cards">
@@ -909,45 +924,45 @@ const WORDS = [
   {w:"Financial assistance", ipa:"/faɪˈnænʃl əˈsɪstəns/", pos:"phr.", def:"经济援助", ex:"", exZh:""},
   {w:"Various", ipa:"/ˈveəriəs/", pos:"adj.", def:"各种各样的", ex:"", exZh:""},
   {w:"Accommodation", ipa:"/əˌkɒməˈdeɪʃn/", pos:"n.", def:"住宿，膳宿", ex:"", exZh:""},
-  {w:"Cheque", ipa:"/tʃek/", pos:"n.", def:"支票（英式拼写）", ex:"", exZh:""},
-  {w:"Stain", ipa:"/steɪn/", pos:"n. / v.", def:"污点，污渍 / 染污；染色", ex:"", exZh:""},
-  {w:"Swallow", ipa:"/ˈswɒləʊ/", pos:"v. / n.", def:"吞咽；吞没 / 燕子", ex:"", exZh:""},
-  {w:"In vain", ipa:"/ɪn veɪn/", pos:"phr.", def:"徒劳，白费", ex:"", exZh:""},
-  {w:"Hate doing sth.", ipa:"/heɪt ˈduːɪŋ/", pos:"phr.", def:"讨厌做某事", ex:"", exZh:""},
-  {w:"Hatred", ipa:"/ˈheɪtrɪd/", pos:"n.", def:"仇恨，憎恨", ex:"", exZh:""},
-  {w:"Landlord", ipa:"/ˈlændlɔːd/", pos:"n.", def:"房东；地主", ex:"", exZh:""},
-  {w:"Vary from ... to ...", ipa:"/ˈveəri frəm tuː/", pos:"phr.", def:"从……到……不等", ex:"", exZh:""},
-  {w:"Make use of", ipa:"/meɪk juːs ɒv/", pos:"phr.", def:"利用", ex:"", exZh:""},
-  {w:"Put to use", ipa:"/pʊt tuː juːs/", pos:"phr.", def:"投入使用，运用", ex:"", exZh:""},
-  {w:"Use up", ipa:"/juːz ʌp/", pos:"phr.", def:"用完，耗尽", ex:"", exZh:""},
-  {w:"Skilled", ipa:"/skɪld/", pos:"adj.", def:"熟练的，有技能的", ex:"", exZh:""},
-  {w:"Up to", ipa:"/ʌp tuː/", pos:"phr.", def:"多达；直到；由……决定", ex:"", exZh:""},
-  {w:"Tight", ipa:"/taɪt/", pos:"adj.", def:"紧的；紧密的", ex:"", exZh:""},
-  {w:"Enslave", ipa:"/ɪnˈsleɪv/", pos:"v.", def:"奴役，使成为奴隶", ex:"", exZh:""},
-  {w:"Slave", ipa:"/sleɪv/", pos:"n.", def:"奴隶", ex:"", exZh:""},
-  {w:"Reward", ipa:"/rɪˈwɔːd/", pos:"n. / v.", def:"奖励，报酬 / 奖励，报答", ex:"", exZh:""},
-  {w:"In (reward/return) for", ipa:"/ɪn rɪˈwɔːd fɔː/", pos:"phr.", def:"作为……的回报", ex:"", exZh:""},
-  {w:"Visual", ipa:"/ˈvɪʒuəl/", pos:"adj.", def:"视觉的", ex:"", exZh:""},
-  {w:"Thread", ipa:"/θred/", pos:"n. / v.", def:"线；线索 / 穿线", ex:"", exZh:""},
-  {w:"Slide", ipa:"/slaɪd/", pos:"v. / n.", def:"滑动 / 滑梯；幻灯片", ex:"", exZh:""},
-  {w:"Cycle", ipa:"/ˈsaɪkl/", pos:"n. / v.", def:"循环；自行车 / 循环", ex:"", exZh:""},
-  {w:"Slight", ipa:"/slaɪt/", pos:"adj.", def:"轻微的，细微的", ex:"", exZh:""},
-  {w:"Shame", ipa:"/ʃeɪm/", pos:"n.", def:"羞耻；遗憾", ex:"", exZh:""},
-  {w:"Trap", ipa:"/træp/", pos:"n. / v.", def:"陷阱 / 困住", ex:"", exZh:""},
-  {w:"At hand", ipa:"/ət hænd/", pos:"phr.", def:"在手边；即将到来", ex:"", exZh:""},
-  {w:"Hand over", ipa:"/hænd ˈəʊvə/", pos:"phr.", def:"移交，交出", ex:"", exZh:""},
-  {w:"Hand in", ipa:"/hænd ɪn/", pos:"phr.", def:"上交", ex:"", exZh:""},
-  {w:"Handy", ipa:"/ˈhændi/", pos:"adj.", def:"方便的；手边的", ex:"", exZh:""},
-  {w:"Unique", ipa:"/juˈniːk/", pos:"adj.", def:"独特的，唯一的", ex:"", exZh:""},
-  {w:"Cut off", ipa:"/kʌt ɒf/", pos:"phr.", def:"切断；隔绝", ex:"", exZh:""},
-  {w:"Slim", ipa:"/slɪm/", pos:"adj.", def:"苗条的；微小的", ex:"", exZh:""},
-  {w:"A slim chance", ipa:"/ə slɪm tʃɑːns/", pos:"phr.", def:"机会渺茫", ex:"", exZh:""},
-  {w:"Tell...from", ipa:"/tel frəm/", pos:"phr.", def:"区分，辨别", ex:"", exZh:""},
-  {w:"Distinguish...from...", ipa:"/dɪˈstɪŋɡwɪʃ frəm/", pos:"phr.", def:"区分，辨别", ex:"", exZh:""},
-  {w:"Slip", ipa:"/slɪp/", pos:"v. / n.", def:"滑倒；溜走 / 差错", ex:"", exZh:""},
-  {w:"File", ipa:"/faɪl/", pos:"n. / v.", def:"文件，档案 / 归档", ex:"", exZh:""},
-  {w:"Brilliant", ipa:"/ˈbrɪliənt/", pos:"adj.", def:"出色的；明亮的", ex:"", exZh:""},
-  {w:"Rope", ipa:"/rəʊp/", pos:"n.", def:"绳子", ex:"", exZh:""}
+  {w:"Cheque", ipa:"/tʃek/", pos:"n.", def:"支票（英式拼写）", ex:"He paid the bill by cheque.", exZh:"他用支票付了账。"},
+  {w:"Stain", ipa:"/steɪn/", pos:"n. / v.", def:"污点，污渍 / 染污；染色", ex:"Coffee left a stain on the carpet.", exZh:"咖啡在地毯上留下了一块污渍。"},
+  {w:"Swallow", ipa:"/ˈswɒləʊ/", pos:"v. / n.", def:"吞咽；吞没 / 燕子", ex:"She swallowed the pill with a glass of water.", exZh:"她用水吞下了药片。"},
+  {w:"In vain", ipa:"/ɪn veɪn/", pos:"phr.", def:"徒劳，白费", ex:"They tried in vain to find the key.", exZh:"他们徒劳地寻找那把钥匙。"},
+  {w:"Hate doing sth.", ipa:"/heɪt ˈduːɪŋ/", pos:"phr.", def:"讨厌做某事", ex:"I hate doing housework on weekends.", exZh:"我讨厌周末做家务。"},
+  {w:"Hatred", ipa:"/ˈheɪtrɪd/", pos:"n.", def:"仇恨，憎恨", ex:"His eyes were full of hatred.", exZh:"他的眼里充满仇恨。"},
+  {w:"Landlord", ipa:"/ˈlændlɔːd/", pos:"n.", def:"房东；地主", ex:"The landlord raised the rent again.", exZh:"房东又涨房租了。"},
+  {w:"Vary from ... to ...", ipa:"/ˈveəri frəm tuː/", pos:"phr.", def:"从……到……不等", ex:"Prices vary from shop to shop.", exZh:"价格因商店而异。"},
+  {w:"Make use of", ipa:"/meɪk juːs ɒv/", pos:"phr.", def:"利用", ex:"We should make use of every chance to practise.", exZh:"我们应该利用每一次练习的机会。"},
+  {w:"Put to use", ipa:"/pʊt tuː juːs/", pos:"phr.", def:"投入使用，运用", ex:"She put her new skills to use at work.", exZh:"她在工作中运用了新技能。"},
+  {w:"Use up", ipa:"/juːz ʌp/", pos:"phr.", def:"用完，耗尽", ex:"We used up all the paper.", exZh:"我们用完了所有的纸。"},
+  {w:"Skilled", ipa:"/skɪld/", pos:"adj.", def:"熟练的，有技能的", ex:"He is a skilled worker.", exZh:"他是一名熟练工人。"},
+  {w:"Up to", ipa:"/ʌp tuː/", pos:"phr.", def:"多达；直到；由……决定", ex:"The hall can hold up to 500 people.", exZh:"大厅最多能容纳 500 人。"},
+  {w:"Tight", ipa:"/taɪt/", pos:"adj.", def:"紧的；紧密的", ex:"These shoes are too tight for me.", exZh:"这双鞋对我来说太紧了。"},
+  {w:"Enslave", ipa:"/ɪnˈsleɪv/", pos:"v.", def:"奴役，使成为奴隶", ex:"The invaders tried to enslave the people.", exZh:"侵略者企图奴役人民。"},
+  {w:"Slave", ipa:"/sleɪv/", pos:"n.", def:"奴隶", ex:"The slaves were set free at last.", exZh:"奴隶们最终获得了自由。"},
+  {w:"Reward", ipa:"/rɪˈwɔːd/", pos:"n. / v.", def:"奖励，报酬 / 奖励，报答", ex:"He got a reward for his honesty.", exZh:"他因诚实而得到奖励。"},
+  {w:"In (reward/return) for", ipa:"/ɪn rɪˈwɔːd fɔː/", pos:"phr.", def:"作为……的回报", ex:"She got a gift in return for her help.", exZh:"她因帮忙而得到了一份礼物。"},
+  {w:"Visual", ipa:"/ˈvɪʒuəl/", pos:"adj.", def:"视觉的", ex:"The film has strong visual effects.", exZh:"这部电影的视觉效果很强。"},
+  {w:"Thread", ipa:"/θred/", pos:"n. / v.", def:"线；线索 / 穿线", ex:"She pulled a thread from her coat.", exZh:"她从外套上抽出一根线。"},
+  {w:"Slide", ipa:"/slaɪd/", pos:"v. / n.", def:"滑动 / 滑梯；幻灯片", ex:"The children like to slide down the hill.", exZh:"孩子们喜欢从山坡上滑下来。"},
+  {w:"Cycle", ipa:"/ˈsaɪkl/", pos:"n. / v.", def:"循环；自行车 / 循环", ex:"The water cycle is important to life.", exZh:"水循环对生命很重要。"},
+  {w:"Slight", ipa:"/slaɪt/", pos:"adj.", def:"轻微的，细微的", ex:"There is a slight difference between the two.", exZh:"两者之间有细微的差别。"},
+  {w:"Shame", ipa:"/ʃeɪm/", pos:"n.", def:"羞耻；遗憾", ex:"It's a shame that you can't come.", exZh:"你不能来真遗憾。"},
+  {w:"Trap", ipa:"/træp/", pos:"n. / v.", def:"陷阱 / 困住", ex:"The mouse was caught in a trap.", exZh:"老鼠被困在陷阱里。"},
+  {w:"At hand", ipa:"/ət hænd/", pos:"phr.", def:"在手边；即将到来", ex:"Help was at hand.", exZh:"援助就在眼前。"},
+  {w:"Hand over", ipa:"/hænd ˈəʊvə/", pos:"phr.", def:"移交，交出", ex:"He handed over the keys to me.", exZh:"他把钥匙交给了我。"},
+  {w:"Hand in", ipa:"/hænd ɪn/", pos:"phr.", def:"上交", ex:"Please hand in your homework tomorrow.", exZh:"请明天交作业。"},
+  {w:"Handy", ipa:"/ˈhændi/", pos:"adj.", def:"方便的；手边的", ex:"A small knife is handy when camping.", exZh:"露营时小刀很方便。"},
+  {w:"Unique", ipa:"/juˈniːk/", pos:"adj.", def:"独特的，唯一的", ex:"Every fingerprint is unique.", exZh:"每个指纹都是独一无二的。"},
+  {w:"Cut off", ipa:"/kʌt ɒf/", pos:"phr.", def:"切断；隔绝", ex:"The village was cut off by the flood.", exZh:"村庄被洪水隔绝了。"},
+  {w:"Slim", ipa:"/slɪm/", pos:"adj.", def:"苗条的；微小的", ex:"She is tall and slim.", exZh:"她又高又瘦。"},
+  {w:"A slim chance", ipa:"/ə slɪm tʃɑːns/", pos:"phr.", def:"机会渺茫", ex:"There is only a slim chance of winning.", exZh:"获胜的机会渺茫。"},
+  {w:"Tell...from", ipa:"/tel frəm/", pos:"phr.", def:"区分，辨别", ex:"Can you tell one from the other?", exZh:"你能区分它们吗？"},
+  {w:"Distinguish...from...", ipa:"/dɪˈstɪŋɡwɪʃ frəm/", pos:"phr.", def:"区分，辨别", ex:"Children must learn to distinguish right from wrong.", exZh:"孩子必须学会分辨是非。"},
+  {w:"Slip", ipa:"/slɪp/", pos:"v. / n.", def:"滑倒；溜走 / 差错", ex:"Be careful not to slip on the wet floor.", exZh:"小心别在湿滑的地上滑倒。"},
+  {w:"File", ipa:"/faɪl/", pos:"n. / v.", def:"文件，档案 / 归档", ex:"Please save the file before you leave.", exZh:"离开前请保存文件。"},
+  {w:"Brilliant", ipa:"/ˈbrɪliənt/", pos:"adj.", def:"出色的；明亮的", ex:"She came up with a brilliant idea.", exZh:"她想出了一个绝妙的主意。"},
+  {w:"Rope", ipa:"/rəʊp/", pos:"n.", def:"绳子", ex:"They pulled the boat with a rope.", exZh:"他们用绳子拉船。"}
 ];
 
 /* =========================================================
@@ -959,7 +974,7 @@ const MIN = 60000;
 const IV = [0, 5/1440, 30/1440, 0.5, 1, 2, 4, 7, 15, 30]; // 艾宾浩斯复习节点（天）
 
 const defaultState = () => ({
-  data: {}, days: {}, settings: { dailyNew: 10, masterN: 3, autoSpeak: true, showIpa: true, theme: "light" }, recent: []
+  data: {}, days: {}, settings: { dailyNew: 10, masterN: 3, autoSpeak: true, showIpa: true, starOnlyUnmastered: true, theme: "light" }, recent: []
 });
 let S = defaultState();
 let storageOK = true;
@@ -970,7 +985,7 @@ function load() {
     if (raw) {
       const obj = JSON.parse(raw);
       S = Object.assign(defaultState(), obj);
-      S.settings = Object.assign({ dailyNew: 10, masterN: 3, autoSpeak: true, showIpa: true, theme: "light" }, obj.settings || {});
+      S.settings = Object.assign({ dailyNew: 10, masterN: 3, autoSpeak: true, showIpa: true, starOnlyUnmastered: true, theme: "light" }, obj.settings || {});
     }
   } catch (e) { storageOK = false; }
   ensureDay();
@@ -1125,6 +1140,24 @@ function renderHome() {
   const revTotal = (day.rv || 0) + s.due;
   $("taskRevBar").style.width = revTotal ? Math.round((day.rv || 0) / revTotal * 100) + "%" : "0%";
 
+  const starUnmastered = WORDS.filter((_, i) => {
+    const st = wstate(i);
+    return st.star && (st.prod || 0) < masterN();
+  }).length;
+  $("taskStarTxt").textContent = starUnmastered + " 个";
+  $("taskStarBar").style.width = (s.star ? Math.round((s.star - starUnmastered) / s.star * 100) : 0) + "%";
+
+  const tm = new Date(); tm.setDate(tm.getDate() + 1);
+  const tmStart = new Date(tm.getFullYear(), tm.getMonth(), tm.getDate()).getTime();
+  const tmEnd = tmStart + 86400000;
+  let tomorrowDue = 0;
+  WORDS.forEach((_, i) => {
+    const st = wstate(i);
+    if (st.seen > 0 && st.due >= tmStart && st.due < tmEnd) tomorrowDue++;
+  });
+  $("planHint").textContent = "今天待复习 " + s.due + " 个 · 明天预计 " + tomorrowDue + " 个";
+  $("btnPlan").disabled = (s.newLeft + s.due) === 0;
+
   const rec = $("recent");
   rec.innerHTML = "";
   if (!S.recent.length) {
@@ -1149,28 +1182,38 @@ let study = null;
 
 function startStudy(mode) {
   const now = Date.now();
+  const day = ensureDay();
+  const unlimited = S.settings.dailyNew === 0;
+  const limit = unlimited ? Infinity : Math.max(0, S.settings.dailyNew - (day.nw || 0));
   let q = [];
-  if (mode === "learn") {
-    const day = ensureDay();
-    const unlimited = S.settings.dailyNew === 0;
-    const limit = unlimited ? Infinity : Math.max(0, S.settings.dailyNew - (day.nw || 0));
-    q = WORDS.map((_, i) => i)
+
+  if (mode === "learn" || mode === "plan") {
+    const newQ = WORDS.map((_, i) => i)
       .filter(i => wstate(i).b === 0)
-      .slice(0, limit === Infinity ? undefined : limit);
-    if (!q.length) {
+      .slice(0, limit === Infinity ? undefined : limit)
+      .map(i => ({ i, rep: 0, kind: "new" }));
+    q = q.concat(newQ);
+    if (mode === "learn" && !newQ.length) {
       toast(limit === 0 && !unlimited ? "今日新词已学完，去复习吧" : "词库里的新词都学过了");
       return;
     }
-  } else {
-    q = WORDS.map((_, i) => i)
+  }
+
+  if (mode === "review" || mode === "plan") {
+    const dueQ = WORDS.map((_, i) => i)
       .filter(i => { const st = wstate(i); return st.seen > 0 && st.due <= now; })
       .sort((a, b) => wstate(a).due - wstate(b).due)
-      .slice(0, 30);
-    if (!q.length) { toast("暂时没有到期的复习，休息一下吧"); return; }
+      .slice(0, 30)
+      .map(i => ({ i, rep: 0, kind: "review" }));
+    q = q.concat(dueQ);
+    if (mode === "review" && !dueQ.length) { toast("暂时没有到期的复习，休息一下吧"); return; }
   }
+
+  if (!q.length) { toast("今日计划已经完成，休息一下吧"); return; }
+
   study = {
     mode,
-    queue: q.map(i => ({ i, rep: 0 })),
+    queue: q,
     idx: 0,
     revealed: false,
     ok: 0,
@@ -1195,8 +1238,9 @@ function showCard() {
     $("modeTag").textContent = "巩固 ×" + cur.rep;
     $("modeTag").className = "tag review";
   } else {
-    $("modeTag").textContent = study.mode === "learn" ? "新词" : "复习";
-    $("modeTag").className = "tag" + (study.mode === "review" ? " review" : "");
+    const kind = cur.kind || (study.mode === "learn" ? "new" : "review");
+    $("modeTag").textContent = kind === "new" ? "新词" : "复习";
+    $("modeTag").className = "tag" + (kind === "review" ? " review" : "");
   }
   $("wordText").textContent = w.w;
   $("ipaText").textContent = w.ipa;
@@ -1269,10 +1313,10 @@ function rate(q) {
     }
     if (!st.seen) {
       st.seen = 1;
-      if (study.mode === "learn") day.nw = (day.nw || 0) + 1;
+      if ((cur.kind || (study.mode === "learn" ? "new" : "review")) === "new") day.nw = (day.nw || 0) + 1;
     } else {
       st.seen++;
-      if (study.mode === "review") day.rv = (day.rv || 0) + 1;
+      if ((cur.kind || (study.mode === "learn" ? "new" : "review")) === "review") day.rv = (day.rv || 0) + 1;
     }
     st.due = now + gap;
     if (q === 0) scheduleRetry(i, 3);
@@ -1402,7 +1446,7 @@ function renderQuizSetup() {
   $("quizPoolNote").textContent = n > 0
     ? "可出题范围：已学 " + n + " 词 · 拼写或汉译英答对 " + masterN() + " 次即判定学习成功"
     : "尚未学习，将从全部 " + WORDS.length + " 词中随机出题";
-  const starN = WORDS.filter((_, i) => wstate(i).star).length;
+  const starN = WORDS.filter((_, i) => wstate(i).star && (!S.settings.starOnlyUnmastered || (wstate(i).prod || 0) < masterN())).length;
   if ($("starCountHint")) $("starCountHint").textContent = starN;
   $("quizSetup").classList.remove("hidden");
   $("quizRun").classList.add("hidden");
@@ -1415,7 +1459,11 @@ function startQuiz(kind) {
   let pool;
   if (kind === "starred") {
     pool = all.filter(i => wstate(i).star);
-    if (!pool.length) { toast("生词本还是空的，先在词库或卡片里收藏几个词"); return; }
+    if (S.settings.starOnlyUnmastered) pool = pool.filter(i => (wstate(i).prod || 0) < masterN());
+    if (!pool.length) {
+      toast(S.settings.starOnlyUnmastered ? "生词本里没有未掌握的词，去学几个新词吧" : "生词本还是空的，先在词库或卡片里收藏几个词");
+      return;
+    }
   } else if (kind === "choice" || kind === "en2cn") {
     pool = learned.length >= 4 ? learned : all;
   } else {
@@ -1735,6 +1783,9 @@ function applyTheme(t) {
 function syncIpaChips(){
   $$("#ipaChips .chip").forEach(c => c.classList.toggle("active", (c.dataset.ipa === "on") === (S.settings.showIpa !== false)));
 }
+function syncStarChips(){
+  $$("#starFilterChips .chip").forEach(c => c.classList.toggle("active", (c.dataset.star === "unmastered") === (S.settings.starOnlyUnmastered !== false)));
+}
 function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.dataset.view));
   $("themeBtn").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
   $("btnLearn").onclick = () => startStudy("learn");
@@ -1777,6 +1828,15 @@ function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.datase
     toast(S.settings.showIpa ? "已开启音标" : "已隐藏音标");
   });
   syncIpaChips();
+  $$("#starFilterChips .chip").forEach(c => c.onclick = () => {
+    S.settings.starOnlyUnmastered = c.dataset.star === "unmastered";
+    save();
+    syncStarChips();
+    renderQuizSetup();
+    toast(S.settings.starOnlyUnmastered ? "生词本：只练未掌握" : "生词本：全部生词");
+  });
+  syncStarChips();
+  $("btnPlan").onclick = () => startStudy("plan");
   $("quizNext").onclick = nextQuestion;
   $("quizAgain").onclick = () => startQuiz(quiz.kind);
   $("quizBack").onclick = () => { renderHome(); go("home"); };
