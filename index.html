@@ -233,6 +233,7 @@
   .quiz-def{font-size:17px;line-height:1.6;margin:0}
   .quiz-word{font-family:Georgia,serif;font-size:44px;margin:6px 0 0;letter-spacing:-.5px}
   .quiz-ipa{color:var(--muted);font-size:14px;display:flex;gap:8px;align-items:center}
+  .g-stem{font-size:17px;line-height:1.75;margin:2px 0 18px}
   .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
   .option{
     border:1px solid var(--line);background:var(--card);border-radius:14px;padding:14px 16px;text-align:left;
@@ -353,6 +354,7 @@
     <button data-view="home" class="active">首页</button>
     <button data-view="library">词库</button>
     <button data-view="quiz">测试</button>
+    <button data-view="grammar">语法</button>
     <button data-view="stats">统计</button>
   </nav>
   <div class="top-actions">
@@ -560,6 +562,57 @@
           <button class="btn primary" id="quizAgain">再来一组</button>
           <button class="btn outline" id="quizBack">返回首页</button>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GRAMMAR ================= -->
+  <section id="view-grammar" class="view hidden">
+    <div class="card pad" id="gHome">
+      <p class="eyebrow">GRAMMAR</p>
+      <h2 style="font-size:24px">语法专项</h2>
+      <p class="muted small">专升本语法题库，按词法、动词、非谓语、句法分类；点选即判分，答错自动收进语法错题本。</p>
+      <div class="chips" id="gCats" style="margin:16px 0 6px">
+        <button class="chip active" data-cat="all">全部</button>
+        <button class="chip" data-cat="词法">词法基础</button>
+        <button class="chip" data-cat="动词">动词</button>
+        <button class="chip" data-cat="非谓语">非谓语</button>
+        <button class="chip" data-cat="句法">句法</button>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin:14px 0">
+        <div class="card stat"><small>已做</small><b id="gDoneNum">0</b><span id="gTotalNum">/ 68 题</span></div>
+        <div class="card stat"><small>正确率</small><b id="gRate">—</b><span>累计作答</span></div>
+        <div class="card stat"><small>语法错题</small><b id="gWrongNum">0</b><span>待巩固</span></div>
+      </div>
+      <div class="cta">
+        <button class="btn primary" id="gStart">开始语法练习</button>
+        <button class="btn outline" id="gWrongBtn">错题重练 <span class="badge" id="gWrongBadge">0</span></button>
+      </div>
+      <p class="muted small" style="margin:14px 0 0">共 68 题：词法 20 · 动词 16 · 非谓语 12 · 句法 20；同一题连续答对 2 次移出错题本。</p>
+    </div>
+
+    <div id="gRun" class="hidden">
+      <div class="quiz-top">
+        <button class="link" id="gExit">← 退出</button>
+        <div class="bar"><i id="gBar"></i></div>
+        <span id="gCounter">1 / 10</span>
+      </div>
+      <div class="card pad quiz-card">
+        <p class="eyebrow" id="gCat">词法</p>
+        <p class="g-stem" id="gStem"></p>
+        <div id="gOpts" class="options"></div>
+        <div class="feedback hidden" id="gFeedback"></div>
+      </div>
+      <div class="quiz-foot"><button class="btn primary hidden" id="gNext">下一题 →</button></div>
+    </div>
+
+    <div class="card done hidden" id="gDone">
+      <div class="eyebrow">RESULT</div>
+      <div class="score" id="gScore">0<small> / 10</small></div>
+      <p class="muted" id="gMsg"></p>
+      <div class="cta" style="justify-content:center">
+        <button class="btn primary" id="gAgain">再来一组</button>
+        <button class="btn outline" id="gBack">返回语法首页</button>
       </div>
     </div>
   </section>
@@ -965,6 +1018,77 @@ const WORDS = [
   {w:"Rope", ipa:"/rəʊp/", pos:"n.", def:"绳子", ex:"They pulled the boat with a rope.", exZh:"他们用绳子拉船。"}
 ];
 
+const GRAMMAR = [
+  {id:"g1", cat:"词法", q:"There are many ___ in the hospital.", opts:["woman doctors", "women doctors", "woman doctor", "women doctor"], ans:1, exp:"复合名词变复数时，主体名词变复数：woman doctor → women doctors。"},
+  {id:"g2", cat:"词法", q:"He gave me some useful ___.", opts:["advices", "advice", "an advice", "advices"], ans:1, exp:"advice 是不可数名词，没有复数形式，也不能与 a/an 连用。"},
+  {id:"g3", cat:"词法", q:"It took me ___ hour to finish the work.", opts:["a", "an", "the", "/"], ans:1, exp:"hour 的 h 不发音，以元音音素开头，用 an。"},
+  {id:"g4", cat:"词法", q:"She plays ___ violin very well.", opts:["a", "an", "the", "/"], ans:2, exp:"play 后接乐器要加定冠词 the：play the piano / the violin。"},
+  {id:"g5", cat:"词法", q:"He goes to ___ school by bike every day.", opts:["a", "the", "/", "an"], ans:2, exp:"go to school 表示“上学”，是抽象意义的场所，用零冠词。"},
+  {id:"g6", cat:"词法", q:"This book is ___; I bought it last week.", opts:["my", "mine", "me", "myself"], ans:1, exp:"此处作表语，需用名词性物主代词 mine，相当于 my book。"},
+  {id:"g7", cat:"词法", q:"Neither of the two answers ___ correct.", opts:["are", "is", "were", "be"], ans:1, exp:"neither of + 复数名词作主语时，谓语通常用单数。"},
+  {id:"g8", cat:"词法", q:"There are trees on ___ side of the road.", opts:["both", "either", "all", "neither"], ans:1, exp:"side 是单数，either side 表示“路的两边（任一边）”；both 后接复数。"},
+  {id:"g9", cat:"词法", q:"___ students in our school is about 2,000.", opts:["A number of", "The number of", "Many", "Much"], ans:1, exp:"the number of 表示“……的数量”，作主语时谓语用单数。"},
+  {id:"g10", cat:"词法", q:"Two ___ years ago, he moved here.", opts:["hundred", "hundreds", "hundred of", "hundreds of"], ans:0, exp:"前面有具体数字时，hundred 不加 -s，也不接 of。"},
+  {id:"g11", cat:"词法", q:"One third of the students ___ from the countryside.", opts:["is", "are", "was", "has"], ans:1, exp:"分数 + of + 名词作主语时，谓语与 of 后的名词一致；students 为复数，用 are。"},
+  {id:"g12", cat:"词法", q:"This book is much ___ than that one.", opts:["interesting", "more interesting", "most interesting", "interested"], ans:1, exp:"多音节形容词的比较级用 more + 原级，than 提示比较级。"},
+  {id:"g13", cat:"词法", q:"He is ___ taller than his brother.", opts:["very", "much", "more", "most"], ans:1, exp:"much 可以修饰比较级；very 不能修饰比较级。"},
+  {id:"g14", cat:"词法", q:"The more you practise, ___ you will be.", opts:["the good", "the better", "better", "the best"], ans:1, exp:"“the + 比较级，the + 比较级”表示“越……越……”。"},
+  {id:"g15", cat:"词法", q:"The film is ___, and I am ___ in it.", opts:["interesting; interested", "interested; interesting", "interesting; interesting", "interested; interested"], ans:0, exp:"-ing 形容词修饰物，表示“令人……的”；-ed 形容词修饰人，表示“感到……的”。"},
+  {id:"g16", cat:"词法", q:"He works ___, but he can ___ finish the task.", opts:["hard; hardly", "hardly; hard", "hard; hard", "hardly; hardly"], ans:0, exp:"hard 意为“努力地”，hardly 意为“几乎不”。"},
+  {id:"g17", cat:"词法", q:"We will have a meeting ___ the morning of May 1st.", opts:["in", "on", "at", "for"], ans:1, exp:"具体某一天的上午用 on：on the morning of May 1st。"},
+  {id:"g18", cat:"词法", q:"I'm looking forward to ___ from you.", opts:["hear", "hearing", "heard", "be heard"], ans:1, exp:"look forward to 中的 to 是介词，后接动名词。"},
+  {id:"g19", cat:"词法", q:"___ it was raining, we went out.", opts:["Although", "But", "However", "Because"], ans:0, exp:"although 引导让步状语从句，不能与 but 连用；此处用 Although。"},
+  {id:"g20", cat:"词法", q:"He didn't come ___ he was ill.", opts:["because", "so", "although", "but"], ans:0, exp:"because 引导原因状语从句；because 不能与 so 连用。"},
+  {id:"g21", cat:"动词", q:"I ___ here since 2020.", opts:["live", "lived", "have lived", "had lived"], ans:2, exp:"since + 时间点，主句用现在完成时，且动词需延续。"},
+  {id:"g22", cat:"动词", q:"By the time he arrived, the film ___.", opts:["began", "had begun", "has begun", "begins"], ans:1, exp:"by the time + 过去时间，主句动作发生在“过去的过去”，用过去完成时。"},
+  {id:"g23", cat:"动词", q:"By next year, I ___ from college.", opts:["graduate", "graduated", "will graduate", "will have graduated"], ans:3, exp:"by + 将来时间，表示到将来某时已经完成，用将来完成时。"},
+  {id:"g24", cat:"动词", q:"Hurry up! The train ___.", opts:["leaves", "is leaving", "left", "has left"], ans:1, exp:"位移动词 leave 的现在进行时可表示即将发生的动作。"},
+  {id:"g25", cat:"动词", q:"The bridge ___ in 1990.", opts:["built", "was built", "is built", "has built"], ans:1, exp:"桥是被建造的，且时间 in 1990 为过去，用一般过去时的被动语态。"},
+  {id:"g26", cat:"动词", q:"The problem must ___ at once.", opts:["solve", "be solved", "solving", "to solve"], ans:1, exp:"情态动词的被动语态：must be + 过去分词。"},
+  {id:"g27", cat:"动词", q:"I ___ this book for three years.", opts:["have bought", "have had", "bought", "had bought"], ans:1, exp:"buy 是非延续性动词，不能与 for + 一段时间连用，应改用 have。"},
+  {id:"g28", cat:"动词", q:"The number of students in our school ___ increasing.", opts:["are", "is", "were", "have"], ans:1, exp:"the number of 作主语，谓语用单数。"},
+  {id:"g29", cat:"动词", q:"A number of students ___ late for class.", opts:["is", "was", "are", "has"], ans:2, exp:"a number of 表示“许多”，修饰复数名词，谓语用复数。"},
+  {id:"g30", cat:"动词", q:"Neither you nor he ___ right.", opts:["are", "is", "were", "am"], ans:1, exp:"neither...nor 连接主语时遵循就近原则，与 he 一致，用 is。"},
+  {id:"g31", cat:"动词", q:"The teacher, together with the students, ___ visiting the museum.", opts:["are", "is", "were", "have"], ans:1, exp:"together with 连接的部分不影响主语，谓语与 the teacher 一致，用单数。"},
+  {id:"g32", cat:"动词", q:"— Must I finish it now? — No, you ___.", opts:["mustn't", "needn't", "can't", "shouldn't"], ans:1, exp:"must 引导的疑问句，否定回答用 needn't 或 don't have to。"},
+  {id:"g33", cat:"动词", q:"You ___ have told me earlier; I could have helped.", opts:["must", "should", "need", "can"], ans:1, exp:"should have done 表示“本应该做而没做”。"},
+  {id:"g34", cat:"动词", q:"You ___ have bought so much food; nobody was hungry.", opts:["mustn't", "needn't", "shouldn't", "can't"], ans:1, exp:"needn't have done 表示“本不必做却做了”。"},
+  {id:"g35", cat:"动词", q:"He ___ get up early, but now he is used to ___ late.", opts:["used to; getting up", "is used to; get up", "used to; get up", "is used to; getting up"], ans:0, exp:"used to do 表示“过去常常”；be used to doing 表示“习惯于”。"},
+  {id:"g36", cat:"动词", q:"If I ___ you, I would accept the offer.", opts:["am", "was", "were", "be"], ans:2, exp:"与现在事实相反的虚拟条件句，if 从句中 be 动词用 were。"},
+  {id:"g37", cat:"非谓语", q:"I enjoy ___ to music after work.", opts:["listen", "listening", "to listen", "listened"], ans:1, exp:"enjoy 后接动名词作宾语。"},
+  {id:"g38", cat:"非谓语", q:"He decided ___ abroad for further study.", opts:["go", "going", "to go", "gone"], ans:2, exp:"decide 后接不定式作宾语。"},
+  {id:"g39", cat:"非谓语", q:"I remember ___ him last year.", opts:["meet", "meeting", "to meet", "met"], ans:1, exp:"remember doing 表示“记得做过某事”。"},
+  {id:"g40", cat:"非谓语", q:"Remember ___ the door when you leave.", opts:["locking", "to lock", "lock", "locked"], ans:1, exp:"remember to do 表示“记得去做某事”。"},
+  {id:"g41", cat:"非谓语", q:"The boss made him ___ overtime.", opts:["work", "working", "to work", "worked"], ans:0, exp:"make sb. do sth.，使役动词后接不带 to 的不定式。"},
+  {id:"g42", cat:"非谓语", q:"He was made ___ overtime.", opts:["work", "working", "to work", "worked"], ans:2, exp:"使役动词变被动后，要还原不定式符号 to。"},
+  {id:"g43", cat:"非谓语", q:"I saw him ___ the room just now.", opts:["enter", "entering", "to enter", "entered"], ans:0, exp:"see sb. do sth. 表示看到动作的全过程；just now 提示动作已完成。"},
+  {id:"g44", cat:"非谓语", q:"___ along the street, I met an old friend.", opts:["Walk", "Walked", "Walking", "To walk"], ans:2, exp:"现在分词作时间状语，逻辑主语 I 与 walk 是主动关系。"},
+  {id:"g45", cat:"非谓语", q:"___ more time, we could have done it better.", opts:["Give", "Giving", "Given", "To give"], ans:2, exp:"过去分词作条件状语，we 与 give 是被动关系。"},
+  {id:"g46", cat:"非谓语", q:"___ his homework, he went out to play.", opts:["Finish", "Finished", "Having finished", "To finish"], ans:2, exp:"完成式 having done 表示动作发生在谓语之前。"},
+  {id:"g47", cat:"非谓语", q:"Weather ___, we will go out tomorrow.", opts:["permits", "permitting", "permitted", "to permit"], ans:1, exp:"独立主格结构：名词 + 现在分词，weather 与 permit 是主动关系。"},
+  {id:"g48", cat:"非谓语", q:"With the work ___, he went home.", opts:["finish", "finishing", "finished", "to finish"], ans:2, exp:"with 复合结构，work 与 finish 是被动关系，用过去分词。"},
+  {id:"g49", cat:"句法", q:"___ he said surprised us all.", opts:["That", "What", "Which", "Whether"], ans:1, exp:"主语从句中 said 缺宾语，用 what 充当宾语并引导从句。"},
+  {id:"g50", cat:"句法", q:"I don't know ___ he will come or not.", opts:["if", "whether", "that", "what"], ans:1, exp:"与 or not 直接连用时只能用 whether。"},
+  {id:"g51", cat:"句法", q:"The news ___ he told me is true.", opts:["that", "what", "which", "who"], ans:0, exp:"定语从句中 told 缺宾语，先行词 news 指物，用 that/which；此处 that 最合适。"},
+  {id:"g52", cat:"句法", q:"He asked me ___.", opts:["where did I live", "where I lived", "where I live", "where do I live"], ans:1, exp:"宾语从句用陈述语序，且主句为过去时，从句用过去时。"},
+  {id:"g53", cat:"句法", q:"This is the best film ___ I have ever seen.", opts:["which", "that", "who", "what"], ans:1, exp:"先行词被最高级修饰时，定语从句只能用 that。"},
+  {id:"g54", cat:"句法", q:"He failed the exam, ___ made his parents angry.", opts:["that", "which", "what", "who"], ans:1, exp:"非限制性定语从句指代整个主句，只能用 which。"},
+  {id:"g55", cat:"句法", q:"This is the house ___ I lived last year.", opts:["which", "that", "where", "when"], ans:2, exp:"先行词是地点，从句中不缺主语或宾语，用关系副词 where。"},
+  {id:"g56", cat:"句法", q:"I still remember the day ___ we first met.", opts:["which", "that", "when", "where"], ans:2, exp:"先行词是时间，从句成分完整，用关系副词 when。"},
+  {id:"g57", cat:"句法", q:"___ is known to all, the earth is round.", opts:["It", "As", "That", "What"], ans:1, exp:"as 引导非限制性定语从句，表示“正如”，可置于句首。"},
+  {id:"g58", cat:"句法", q:"___ you work hard, you will fail.", opts:["If", "Unless", "Although", "Because"], ans:1, exp:"unless = if not，表示“除非……否则”。"},
+  {id:"g59", cat:"句法", q:"___ it was raining, they went on working.", opts:["Although", "But", "However", "Because"], ans:0, exp:"although 引导让步状语从句，不能与 but 连用。"},
+  {id:"g60", cat:"句法", q:"He ran ___ fast that nobody could catch him.", opts:["so", "such", "very", "too"], ans:0, exp:"so + 形容词/副词 + that 引导结果状语从句。"},
+  {id:"g61", cat:"句法", q:"Not until he came ___ the truth.", opts:["I knew", "did I know", "I know", "do I know"], ans:1, exp:"not until 置于句首时，主句部分倒装，从句不倒装。"},
+  {id:"g62", cat:"句法", q:"Only in this way ___ succeed.", opts:["we can", "can we", "we could", "could we"], ans:1, exp:"only + 状语置于句首，主句部分倒装。"},
+  {id:"g63", cat:"句法", q:"He likes English, and ___.", opts:["so I do", "so do I", "so am I", "neither do I"], ans:1, exp:"so + 助动词 + 主语，表示“某人也一样”。"},
+  {id:"g64", cat:"句法", q:"It was in the park ___ I met him.", opts:["which", "that", "where", "when"], ans:1, exp:"强调句型 It was + 被强调部分 + that + 其余部分，强调地点状语用 that。"},
+  {id:"g65", cat:"句法", q:"He hardly knows me, ___?", opts:["does he", "doesn't he", "is he", "isn't he"], ans:0, exp:"hardly 表示否定，反义疑问句用肯定形式。"},
+  {id:"g66", cat:"句法", q:"Let's go, ___?", opts:["shall we", "will you", "do we", "don't we"], ans:0, exp:"Let's 开头的祈使句，反义疑问句用 shall we。"},
+  {id:"g67", cat:"句法", q:"It is the first time that I ___ here.", opts:["come", "came", "have come", "had come"], ans:2, exp:"It is the first time that + 现在完成时。"},
+  {id:"g68", cat:"句法", q:"It took me two hours ___ the work.", opts:["finish", "finishing", "to finish", "finished"], ans:2, exp:"It takes sb. some time to do sth.，用不定式作真正主语。"}
+];
+
 /* =========================================================
    状态 / 存储
    ========================================================= */
@@ -1071,6 +1195,7 @@ function go(view) {
   if (view === "home") renderHome();
   if (view === "library") renderLibrary();
   if (view === "stats") renderStats();
+  if (view === "grammar") renderGrammar();
   if (view === "quiz") renderQuizSetup();
 }
 
@@ -1712,6 +1837,134 @@ function renderForecast() {
     requestAnimationFrame(() => { col.querySelector(".bar-v").style.height = h + "px"; });
   });
 }
+/* =========================================================
+   语法专项
+   ========================================================= */
+const GKEY = "shici.grammar.v1";
+const LETTERS = ["A", "B", "C", "D"];
+let G = { rec: {}, wrong: {} };
+let gquiz = null;
+
+function loadGrammar() {
+  try {
+    const raw = localStorage.getItem(GKEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      G = { rec: obj.rec || {}, wrong: obj.wrong || {} };
+    }
+  } catch (e) { /* ignore */ }
+}
+function saveGrammar() {
+  try { localStorage.setItem(GKEY, JSON.stringify(G)); } catch (e) { /* ignore */ }
+}
+function grammarStats() {
+  let done = 0, right = 0, total = 0;
+  GRAMMAR.forEach(g => {
+    const r = G.rec[g.id];
+    if (r) {
+      done++;
+      right += r.r || 0;
+      total += (r.r || 0) + (r.w || 0);
+    }
+  });
+  return { done, right, total, wrong: Object.keys(G.wrong).length, rate: total ? Math.round(right / total * 100) : null };
+}
+function renderGrammar() {
+  const s = grammarStats();
+  $("gDoneNum").textContent = s.done;
+  $("gTotalNum").textContent = "/ " + GRAMMAR.length + " 题";
+  $("gRate").textContent = s.rate === null ? "—" : s.rate + "%";
+  $("gWrongNum").textContent = s.wrong;
+  $("gWrongBadge").textContent = s.wrong;
+  $("gWrongBtn").disabled = s.wrong === 0;
+}
+function startGrammar(cat, ids) {
+  let pool;
+  if (ids) {
+    pool = ids.map(id => GRAMMAR.find(g => g.id === id)).filter(Boolean);
+  } else {
+    pool = GRAMMAR.filter(g => cat === "all" || g.cat === cat);
+  }
+  if (!pool.length) { toast(ids ? "语法错题本是空的" : "这个分类还没有题目"); return; }
+  pool = shuffled(pool).slice(0, Math.min(10, pool.length));
+  gquiz = { queue: pool, idx: 0, score: 0, answered: false, cat: ids ? "错题" : cat, wrongIds: [] };
+  $("gHome").classList.add("hidden");
+  $("gDone").classList.add("hidden");
+  $("gRun").classList.remove("hidden");
+  go("grammar");
+  showG();
+}
+function showG() {
+  const g = gquiz.queue[gquiz.idx];
+  gquiz.answered = false;
+  $("gCat").textContent = g.cat;
+  $("gStem").textContent = g.q;
+  $("gCounter").textContent = (gquiz.idx + 1) + " / " + gquiz.queue.length;
+  $("gBar").style.width = (gquiz.idx / gquiz.queue.length * 100) + "%";
+  $("gFeedback").classList.add("hidden");
+  $("gNext").classList.add("hidden");
+  const box = $("gOpts");
+  box.innerHTML = "";
+  g.opts.forEach((text, i) => {
+    const b = document.createElement("button");
+    b.className = "option";
+    b.innerHTML = '<b style="margin-right:8px;color:var(--brand)">' + LETTERS[i] + '</b>' + esc(text);
+    b.onclick = () => answerG(i);
+    box.appendChild(b);
+  });
+}
+function answerG(i) {
+  if (!gquiz || gquiz.answered) return;
+  const g = gquiz.queue[gquiz.idx];
+  const correct = i === g.ans;
+  gquiz.answered = true;
+  const opts = $$("#gOpts .option");
+  opts.forEach((el, k) => {
+    el.disabled = true;
+    if (k === g.ans) el.classList.add("correct");
+    else if (k === i) el.classList.add("wrong");
+  });
+  if (correct) gquiz.score++;
+  const r = G.rec[g.id] || { r: 0, w: 0 };
+  if (correct) r.r++; else r.w++;
+  G.rec[g.id] = r;
+  if (correct) {
+    if (G.wrong[g.id]) {
+      G.wrong[g.id].streak = (G.wrong[g.id].streak || 0) + 1;
+      if (G.wrong[g.id].streak >= 2) delete G.wrong[g.id];
+    }
+  } else {
+    const w = G.wrong[g.id] || { count: 0, streak: 0 };
+    w.count = (w.count || 0) + 1;
+    w.streak = 0;
+    G.wrong[g.id] = w;
+    if (!gquiz.wrongIds.includes(g.id)) gquiz.wrongIds.push(g.id);
+  }
+  saveGrammar();
+  const fb = $("gFeedback");
+  fb.className = "feedback " + (correct ? "ok" : "no");
+  fb.innerHTML = '<div class="fb-title">' + (correct ? "回答正确 ✓" : "回答错误 ✗") + '</div>' +
+    (correct ? "" : '<div class="fb-ans">正确答案：' + LETTERS[g.ans] + '．' + esc(g.opts[g.ans]) + '</div>') +
+    '<div class="fb-exp">解析：' + esc(g.exp) + '</div>';
+  fb.classList.remove("hidden");
+  $("gNext").classList.remove("hidden");
+  $("gNext").focus();
+}
+function nextG() {
+  gquiz.idx++;
+  if (gquiz.idx >= gquiz.queue.length) finishG();
+  else showG();
+}
+function finishG() {
+  $("gRun").classList.add("hidden");
+  $("gDone").classList.remove("hidden");
+  const total = gquiz.queue.length;
+  $("gScore").innerHTML = gquiz.score + "<small> / " + total + "</small>";
+  const rate = Math.round(gquiz.score / total * 100);
+  $("gMsg").textContent = rate >= 90 ? "语法掌握得很稳。" : rate >= 70 ? "不错，错题已收入语法错题本。" : "还需要巩固，建议把错题重练一遍。";
+  renderGrammar();
+}
+
 function renderStats() {
   const s = computeStats();
   const day = ensureDay();
@@ -1837,6 +2090,36 @@ function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.datase
   });
   syncStarChips();
   $("btnPlan").onclick = () => startStudy("plan");
+
+  $$("#gCats .chip").forEach(c => c.onclick = () => {
+    $$("#gCats .chip").forEach(x => x.classList.remove("active"));
+    c.classList.add("active");
+  });
+  $("gStart").onclick = () => {
+    const cat = ($$("#gCats .chip.active")[0] || { dataset: { cat: "all" } }).dataset.cat;
+    startGrammar(cat);
+  };
+  $("gWrongBtn").onclick = () => {
+    const ids = Object.keys(G.wrong);
+    if (!ids.length) { toast("语法错题本是空的"); return; }
+    startGrammar("错题", ids);
+  };
+  $("gExit").onclick = () => {
+    gquiz = null;
+    $("gRun").classList.add("hidden");
+    $("gDone").classList.add("hidden");
+    $("gHome").classList.remove("hidden");
+    renderGrammar();
+  };
+  $("gNext").onclick = nextG;
+  $("gAgain").onclick = () => startGrammar(gquiz.cat, gquiz.cat === "错题" ? Object.keys(G.wrong) : null);
+  $("gBack").onclick = () => {
+    gquiz = null;
+    $("gRun").classList.add("hidden");
+    $("gDone").classList.add("hidden");
+    $("gHome").classList.remove("hidden");
+    renderGrammar();
+  };
   $("quizNext").onclick = nextQuestion;
   $("quizAgain").onclick = () => startQuiz(quiz.kind);
   $("quizBack").onclick = () => { renderHome(); go("home"); };
@@ -1896,12 +2179,27 @@ function bind() {  $$("#tabs button").forEach(b => b.onclick = () => go(b.datase
     if (current !== "quiz" || $("quizRun").classList.contains("hidden")) return;
     if (e.key === "Enter" && !$("quizNext").classList.contains("hidden")) { e.preventDefault(); nextQuestion(); }
   });
+  document.addEventListener("keydown", (e) => {
+    if (current !== "grammar" || $("gRun").classList.contains("hidden")) return;
+    if (e.target.tagName === "INPUT") return;
+    if (gquiz && gquiz.answered) {
+      if (e.key === "Enter") { e.preventDefault(); nextG(); }
+      return;
+    }
+    if (/^[1-4]$/.test(e.key)) {
+      e.preventDefault();
+      const opts = $$("#gOpts .option");
+      const i = Number(e.key) - 1;
+      if (opts[i]) answerG(i);
+    }
+  });
 }
 
 /* =========================================================
    启动
    ========================================================= */
 load();
+loadGrammar();
 applyTheme(S.settings.theme || "light");
 $("brandCount").textContent = WORDS.length;
 $("libCount").textContent = WORDS.length;
