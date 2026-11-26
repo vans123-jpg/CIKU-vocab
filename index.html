@@ -219,7 +219,7 @@
   /* ---------- quiz ---------- */
   .quiz-shell{max-width:720px;margin:0 auto}
   .quiz-shell .pad{display:grid;gap:6px}
-  .mode-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+  .mode-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0}
   .mode-card{
     border:1px solid var(--line);background:var(--card);border-radius:18px;padding:20px;text-align:left;
     display:grid;gap:6px;transition:.16s;
@@ -271,6 +271,8 @@
   .chart .bar-v{width:100%;max-width:34px;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#6366f1,#0ea5e9);min-height:3px;transition:height .4s}
   .chart .lbl{font-size:11.5px;color:var(--muted)}
   .chart .num{font-size:11px;color:var(--muted)}
+  .iv-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .iv-list span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted)}
   .mastery{display:grid;gap:12px;margin-top:18px}
   .m-row{display:grid;grid-template-columns:92px 1fr 42px;gap:12px;align-items:center;font-size:13px}
   .m-row .bar{height:10px}
@@ -481,7 +483,7 @@
       <div class="card pad" id="quizSetup">
         <p class="eyebrow">练习</p>
         <h2>单词测试</h2>
-        <p class="muted small">拼写、汉译英、选择三种模式，每组最多 10 题；拼写或汉译英答对 3 次，该词才算学习成功，答错的词会自动进入复习队列。</p>
+        <p class="muted small">拼写、汉译英、英译汉、选择与生词本专项五种模式，每组最多 10 题；拼写或汉译英答对 3 次，该词才算学习成功，答错的词会自动进入复习队列。</p>
         <div class="field" style="margin:16px 0 4px">
           <label>题目音标</label>
           <div class="chips" id="ipaChips">
@@ -499,6 +501,16 @@
             <span class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9M8.5 3v2M11 5c0 5-3.5 9-7 11"/><path d="M5 9c1.2 3.4 4.2 6.2 7.5 7.4"/><path d="M13.5 19l4-9 4 9M15.2 15.5h4.6"/></svg></span>
             <b>汉译英</b>
             <small>看中文释义，从四个单词中选出正确的一项</small>
+          </button>
+          <button class="mode-card" data-quiz="en2cn">
+            <span class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5h6M17 3v2M20 5c0 4-2.5 7.5-6 9"/><path d="M15 9c1 2.6 3.2 4.8 6 6"/><path d="M3 19h6M6 19l4-9 4 9"/></svg></span>
+            <b>英译汉</b>
+            <small>看英文单词，从四个中文释义中选出正确的一项</small>
+          </button>
+          <button class="mode-card" data-quiz="starred">
+            <span class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.9l6-.9z"/></svg></span>
+            <b>生词本专项</b>
+            <small>只练收藏的 <span id="starCountHint">0</span> 个生词，四种题型混合</small>
           </button>
           <button class="mode-card" data-quiz="choice">
             <span class="mode-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3.1"/><path d="M12 2.2v2.4M12 19.4v2.4M2.2 12h2.4M19.4 12h2.4"/></svg></span>
@@ -554,6 +566,18 @@
     <div class="card pad" style="margin-top:14px">
       <div class="task-head"><h3>掌握程度</h3><span class="muted small" id="masterySum">共 50 词</span></div>
       <div class="mastery" id="mastery"></div>
+    </div>
+
+    <div class="card pad" style="margin-top:14px">
+      <div class="task-head"><h3>艾宾浩斯记忆曲线</h3><span class="muted small">复习节奏示意</span></div>
+      <svg id="curve" viewBox="0 0 640 170" style="width:100%;height:auto;display:block;margin-top:6px"></svg>
+      <div class="iv-list" id="ivList"></div>
+      <p class="muted small" style="margin:10px 0 0">复习节点：5 分钟 → 30 分钟 → 12 小时 → 1 天 → 2 天 → 4 天 → 7 天 → 15 天 → 30 天。答对进入下一节点，答错回到起点，符合遗忘曲线“先密后疏”的规律。</p>
+    </div>
+
+    <div class="card pad" style="margin-top:14px">
+      <div class="task-head"><h3>未来 7 天待复习</h3><span class="muted small">按记忆阶段推算</span></div>
+      <div class="chart" id="forecast"></div>
     </div>
 
     <div class="card pad" style="margin-top:14px">
@@ -884,7 +908,46 @@ const WORDS = [
   {w:"A variety of", ipa:"/ə vəˈraɪəti ɒv/", pos:"phr.", def:"各种各样的", ex:"", exZh:""},
   {w:"Financial assistance", ipa:"/faɪˈnænʃl əˈsɪstəns/", pos:"phr.", def:"经济援助", ex:"", exZh:""},
   {w:"Various", ipa:"/ˈveəriəs/", pos:"adj.", def:"各种各样的", ex:"", exZh:""},
-  {w:"Accommodation", ipa:"/əˌkɒməˈdeɪʃn/", pos:"n.", def:"住宿，膳宿", ex:"", exZh:""}
+  {w:"Accommodation", ipa:"/əˌkɒməˈdeɪʃn/", pos:"n.", def:"住宿，膳宿", ex:"", exZh:""},
+  {w:"Cheque", ipa:"/tʃek/", pos:"n.", def:"支票（英式拼写）", ex:"", exZh:""},
+  {w:"Stain", ipa:"/steɪn/", pos:"n. / v.", def:"污点，污渍 / 染污；染色", ex:"", exZh:""},
+  {w:"Swallow", ipa:"/ˈswɒləʊ/", pos:"v. / n.", def:"吞咽；吞没 / 燕子", ex:"", exZh:""},
+  {w:"In vain", ipa:"/ɪn veɪn/", pos:"phr.", def:"徒劳，白费", ex:"", exZh:""},
+  {w:"Hate doing sth.", ipa:"/heɪt ˈduːɪŋ/", pos:"phr.", def:"讨厌做某事", ex:"", exZh:""},
+  {w:"Hatred", ipa:"/ˈheɪtrɪd/", pos:"n.", def:"仇恨，憎恨", ex:"", exZh:""},
+  {w:"Landlord", ipa:"/ˈlændlɔːd/", pos:"n.", def:"房东；地主", ex:"", exZh:""},
+  {w:"Vary from ... to ...", ipa:"/ˈveəri frəm tuː/", pos:"phr.", def:"从……到……不等", ex:"", exZh:""},
+  {w:"Make use of", ipa:"/meɪk juːs ɒv/", pos:"phr.", def:"利用", ex:"", exZh:""},
+  {w:"Put to use", ipa:"/pʊt tuː juːs/", pos:"phr.", def:"投入使用，运用", ex:"", exZh:""},
+  {w:"Use up", ipa:"/juːz ʌp/", pos:"phr.", def:"用完，耗尽", ex:"", exZh:""},
+  {w:"Skilled", ipa:"/skɪld/", pos:"adj.", def:"熟练的，有技能的", ex:"", exZh:""},
+  {w:"Up to", ipa:"/ʌp tuː/", pos:"phr.", def:"多达；直到；由……决定", ex:"", exZh:""},
+  {w:"Tight", ipa:"/taɪt/", pos:"adj.", def:"紧的；紧密的", ex:"", exZh:""},
+  {w:"Enslave", ipa:"/ɪnˈsleɪv/", pos:"v.", def:"奴役，使成为奴隶", ex:"", exZh:""},
+  {w:"Slave", ipa:"/sleɪv/", pos:"n.", def:"奴隶", ex:"", exZh:""},
+  {w:"Reward", ipa:"/rɪˈwɔːd/", pos:"n. / v.", def:"奖励，报酬 / 奖励，报答", ex:"", exZh:""},
+  {w:"In (reward/return) for", ipa:"/ɪn rɪˈwɔːd fɔː/", pos:"phr.", def:"作为……的回报", ex:"", exZh:""},
+  {w:"Visual", ipa:"/ˈvɪʒuəl/", pos:"adj.", def:"视觉的", ex:"", exZh:""},
+  {w:"Thread", ipa:"/θred/", pos:"n. / v.", def:"线；线索 / 穿线", ex:"", exZh:""},
+  {w:"Slide", ipa:"/slaɪd/", pos:"v. / n.", def:"滑动 / 滑梯；幻灯片", ex:"", exZh:""},
+  {w:"Cycle", ipa:"/ˈsaɪkl/", pos:"n. / v.", def:"循环；自行车 / 循环", ex:"", exZh:""},
+  {w:"Slight", ipa:"/slaɪt/", pos:"adj.", def:"轻微的，细微的", ex:"", exZh:""},
+  {w:"Shame", ipa:"/ʃeɪm/", pos:"n.", def:"羞耻；遗憾", ex:"", exZh:""},
+  {w:"Trap", ipa:"/træp/", pos:"n. / v.", def:"陷阱 / 困住", ex:"", exZh:""},
+  {w:"At hand", ipa:"/ət hænd/", pos:"phr.", def:"在手边；即将到来", ex:"", exZh:""},
+  {w:"Hand over", ipa:"/hænd ˈəʊvə/", pos:"phr.", def:"移交，交出", ex:"", exZh:""},
+  {w:"Hand in", ipa:"/hænd ɪn/", pos:"phr.", def:"上交", ex:"", exZh:""},
+  {w:"Handy", ipa:"/ˈhændi/", pos:"adj.", def:"方便的；手边的", ex:"", exZh:""},
+  {w:"Unique", ipa:"/juˈniːk/", pos:"adj.", def:"独特的，唯一的", ex:"", exZh:""},
+  {w:"Cut off", ipa:"/kʌt ɒf/", pos:"phr.", def:"切断；隔绝", ex:"", exZh:""},
+  {w:"Slim", ipa:"/slɪm/", pos:"adj.", def:"苗条的；微小的", ex:"", exZh:""},
+  {w:"A slim chance", ipa:"/ə slɪm tʃɑːns/", pos:"phr.", def:"机会渺茫", ex:"", exZh:""},
+  {w:"Tell...from", ipa:"/tel frəm/", pos:"phr.", def:"区分，辨别", ex:"", exZh:""},
+  {w:"Distinguish...from...", ipa:"/dɪˈstɪŋɡwɪʃ frəm/", pos:"phr.", def:"区分，辨别", ex:"", exZh:""},
+  {w:"Slip", ipa:"/slɪp/", pos:"v. / n.", def:"滑倒；溜走 / 差错", ex:"", exZh:""},
+  {w:"File", ipa:"/faɪl/", pos:"n. / v.", def:"文件，档案 / 归档", ex:"", exZh:""},
+  {w:"Brilliant", ipa:"/ˈbrɪliənt/", pos:"adj.", def:"出色的；明亮的", ex:"", exZh:""},
+  {w:"Rope", ipa:"/rəʊp/", pos:"n.", def:"绳子", ex:"", exZh:""}
 ];
 
 /* =========================================================
@@ -893,7 +956,7 @@ const WORDS = [
 const KEY = "shici.vocab.v1";
 const DAY = 86400000;
 const MIN = 60000;
-const IV = [0, 10/1440, 1, 3, 7, 21, 60]; // 各记忆盒间隔（天）
+const IV = [0, 5/1440, 30/1440, 0.5, 1, 2, 4, 7, 15, 30]; // 艾宾浩斯复习节点（天）
 
 const defaultState = () => ({
   data: {}, days: {}, settings: { dailyNew: 10, masterN: 3, autoSpeak: true, showIpa: true, theme: "light" }, recent: []
@@ -1193,15 +1256,15 @@ function rate(q) {
   else { st.ok++; day.ok++; study.ok++; }
 
   if (rep === 0) {
-    if (q === 0) { st.b = 1; gap = 10 * MIN; }
+    if (q === 0) { st.b = 1; gap = IV[1] * DAY; }
     else if (q === 1) {
       st.b = Math.max(1, st.b - 1);
-      gap = st.b <= 1 ? 10 * MIN : (st.b === 2 ? DAY : 3 * DAY);
+      gap = IV[st.b] * DAY;
     } else if (q === 2) {
-      st.b = Math.min(6, st.b + 1);
+      st.b = Math.min(9, st.b + 1);
       gap = IV[st.b] * DAY;
     } else {
-      st.b = Math.min(6, st.b + 2);
+      st.b = Math.min(9, st.b + 2);
       gap = IV[st.b] * DAY;
     }
     if (!st.seen) {
@@ -1216,14 +1279,14 @@ function rate(q) {
     else if (q === 1) scheduleRetry(i, 2);
   } else if (q < 2) {
     st.b = 1;
-    st.due = now + 10 * MIN;
+    st.due = now + IV[1] * DAY;
   }
 
   S.recent = [i, ...S.recent.filter(x => x !== i)].slice(0, 8);
   save();
   if (q === 0) toast("记错啦，本组会再考你几次");
-  else if (q === 1) toast("有点模糊，稍后再巩固");
-  else toast(gap >= DAY ? "安排 " + Math.round(gap / DAY) + " 天后复习" : "10 分钟后再复习");
+  else if (q === 1) toast("有点模糊，下次 " + humanGap(gap));
+  else toast("下次复习：" + humanGap(gap));
   nextCard();
 }
 
@@ -1309,7 +1372,9 @@ function openDetail(i) {
   $("dSeen").textContent = "学习 " + (st.seen || 0) + " 次";
   const prod = st.prod || 0;
   $("dProd").textContent = "拼写 / 汉译英 " + prod + " / " + masterN() + (prod >= masterN() ? " · 已学习成功" : "");
-  $("dNext").textContent = st.seen ? (st.due <= Date.now() ? "已到复习时间" : "下次复习：" + humanGap(st.due - Date.now())) : "尚未安排复习";
+  $("dNext").textContent = st.seen
+    ? (st.due <= Date.now() ? "已到复习时间" : "下次复习：" + humanGap(st.due - Date.now())) + " · 记忆阶段 " + (st.b || 0) + "/9"
+    : "尚未安排复习";
   $("dStar").textContent = st.star ? "★ 已在生词本" : "☆ 加入生词本";
   $("modal").classList.remove("hidden");
 }
@@ -1337,6 +1402,8 @@ function renderQuizSetup() {
   $("quizPoolNote").textContent = n > 0
     ? "可出题范围：已学 " + n + " 词 · 拼写或汉译英答对 " + masterN() + " 次即判定学习成功"
     : "尚未学习，将从全部 " + WORDS.length + " 词中随机出题";
+  const starN = WORDS.filter((_, i) => wstate(i).star).length;
+  if ($("starCountHint")) $("starCountHint").textContent = starN;
   $("quizSetup").classList.remove("hidden");
   $("quizRun").classList.add("hidden");
   $("quizResult").classList.add("hidden");
@@ -1345,13 +1412,21 @@ function startQuiz(kind) {
   const learned = WORDS.map((_, i) => i).filter(i => wstate(i).seen > 0);
   const all = WORDS.map((_, i) => i);
   const need = learned.filter(i => (wstate(i).prod || 0) < masterN());
-  const pool = kind === "choice"
-    ? (learned.length >= 4 ? learned : all)
-    : (need.length >= 4 ? need : (learned.length >= 4 ? learned : all));
+  let pool;
+  if (kind === "starred") {
+    pool = all.filter(i => wstate(i).star);
+    if (!pool.length) { toast("生词本还是空的，先在词库或卡片里收藏几个词"); return; }
+  } else if (kind === "choice" || kind === "en2cn") {
+    pool = learned.length >= 4 ? learned : all;
+  } else {
+    pool = need.length >= 4 ? need : (learned.length >= 4 ? learned : all);
+  }
   const picked = shuffled(pool).slice(0, Math.min(10, pool.length));
   const qs = picked.map(i => {
-    if (kind === "spell") return { type: "spell", i };
-    const askWord = kind === "cn2en" ? false : Math.random() < 0.6;
+    let mode = kind;
+    if (kind === "starred") mode = ["spell", "en2cn", "cn2en", "choice"][Math.floor(Math.random() * 4)];
+    if (mode === "spell") return { type: "spell", i };
+    const askWord = mode === "en2cn" ? true : mode === "cn2en" ? false : Math.random() < 0.6;
     const others = shuffled(all.filter(j => j !== i)).slice(0, 3);
     return { type: "choice", i, askWord, options: shuffled([i, ...others]) };
   });
@@ -1544,6 +1619,51 @@ function finishQuiz() {
 /* =========================================================
    统计
    ========================================================= */
+const STAGES = ["5 分", "30 分", "12 小时", "1 天", "2 天", "4 天", "7 天", "15 天", "30 天"];
+function renderCurve() {
+  const svg = $("curve");
+  if (!svg) return;
+  const W = 640, H = 170, padL = 26, padR = 14, padT = 18, padB = 30;
+  const seg = (W - padL - padR) / STAGES.length;
+  let path = "", dots = "", labels = "";
+  for (let k = 0; k < STAGES.length; k++) {
+    const x0 = padL + k * seg, x1 = x0 + seg * 0.86;
+    const y0 = padT + 6, y1 = H - padB - 14;
+    path += `M ${x0.toFixed(1)} ${y0} L ${x1.toFixed(1)} ${y1} `;
+    if (k < STAGES.length - 1) path += `M ${x1.toFixed(1)} ${y1} L ${(padL + (k + 1) * seg).toFixed(1)} ${y0} `;
+    dots += `<circle cx="${x0.toFixed(1)}" cy="${y0}" r="3" fill="#4f46e5"/>`;
+    labels += `<text x="${(x0 + seg / 2).toFixed(1)}" y="${H - 8}" font-size="11" fill="#6b7280" text-anchor="middle">${STAGES[k]}</text>`;
+  }
+  svg.innerHTML = `<path d="${path}" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linejoin="round"/>${dots}
+    <line x1="${padL}" y1="${H - padB - 14}" x2="${W - padR}" y2="${H - padB - 14}" stroke="var(--line)" stroke-width="1"/>${labels}`;
+  $("ivList").innerHTML = STAGES.map((s, i) => `<span>${i + 1}. ${s}</span>`).join("");
+}
+function renderForecast() {
+  const box = $("forecast");
+  if (!box) return;
+  box.innerHTML = "";
+  const days = [];
+  for (let k = 0; k < 7; k++) {
+    const d = new Date(); d.setDate(d.getDate() + k);
+    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const end = start + 86400000;
+    let n = 0;
+    WORDS.forEach((_, i) => {
+      const st = wstate(i);
+      if (st.seen > 0 && st.due >= start && st.due < end) n++;
+    });
+    days.push({ n, label: (d.getMonth() + 1) + "/" + d.getDate() });
+  }
+  const max = Math.max(1, ...days.map(d => d.n));
+  days.forEach(d => {
+    const col = document.createElement("div");
+    col.className = "col";
+    const h = Math.max(4, Math.round(d.n / max * 110));
+    col.innerHTML = '<span class="num">' + (d.n || "") + '</span><div class="bar-v" style="height:0"></div><span class="lbl">' + d.label + '</span>';
+    box.appendChild(col);
+    requestAnimationFrame(() => { col.querySelector(".bar-v").style.height = h + "px"; });
+  });
+}
 function renderStats() {
   const s = computeStats();
   const day = ensureDay();
@@ -1592,6 +1712,8 @@ function renderStats() {
     requestAnimationFrame(() => { r.querySelector("i").style.width = (val / WORDS.length * 100) + "%"; });
   });
   $("masterySum").textContent = "共 " + WORDS.length + " 词";
+  renderCurve();
+  renderForecast();
   $("dailyNew").value = String(S.settings.dailyNew);
   $("masterN").value = String(masterN());
   $("autoSpeak").classList.toggle("on", !!S.settings.autoSpeak);
